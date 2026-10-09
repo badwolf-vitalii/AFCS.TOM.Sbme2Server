@@ -6,6 +6,7 @@ using AFCS.TOM.SbmeModels.BGL;
 using AFCS.TOM.SbmeModels.Enums;
 using AFCS.TOM.SbmeModels.VtCashFlow;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.SqlServer.Dac;
 using Newtonsoft.Json;
 using NLog;
@@ -166,6 +167,8 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
             DatabaseInfo? dbInfo = null;
 
             var context = GetDbContext();
+            try
+            {
 
             try
             {
@@ -195,63 +198,76 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
 
             bool Update(int version)
             {
-                System.Data.Common.DbTransaction? tran = null;
                 var optional = false;
-                var tag_optional = "[OPTIONAL]";
-                
+                const string optionalTag = "[OPTIONAL]";
                 try
                 {
-                    LogHelper.Debug(_logger, "Getting DB connection");
-                    var connection = _context.Database.GetDbConnection();
+                    var updatesPath = _bglDataLayerConfiguration.SqlSrv2014 ? "BglDbUpdate2014" : "BglDbUpdate";
+                    var cmdFileName = Path.Combine(updatesPath, $"{version}.sql");
+                    var cmdText = File.ReadAllText(cmdFileName);
+                    optional = cmdText.StartsWith(optionalTag, StringComparison.InvariantCultureIgnoreCase);
+                    if (optional)
+                        cmdText = cmdText.Substring(optionalTag.Length);
 
-                    using (var command = connection.CreateCommand())
+                    context.Database.OpenConnection();
+                    try
                     {
-                        var updatesPath = _bglDataLayerConfiguration.SqlSrv2014 ? "BglDbUpdate2014" : "BglDbUpdate";
-                        var cmdFileName = Path.Combine(updatesPath, $"{version}.sql");
-                        var cmdText = File.ReadAllText(cmdFileName);
-                        optional = cmdText.StartsWith(tag_optional, StringComparison.InvariantCultureIgnoreCase);
-                        if (optional)
-                            cmdText = cmdText.Substring(tag_optional.Length);
+                        using var transaction = context.Database.BeginTransaction();
+                        using var command = context.Database.GetDbConnection().CreateCommand();
+                        command.Transaction = transaction.GetDbTransaction();
                         command.CommandText = cmdText;
-                        LogHelper.Debug(_logger, "Opening DB connection");
-                        context.Database.OpenConnection();
-                        tran = context.Database.GetDbConnection().BeginTransaction();
-                        command.Transaction = tran;
                         LogHelper.Debug(_logger, $"Executing query {cmdFileName}");
-                        var res = command.ExecuteNonQuery();
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+                        return true;
                     }
-                    tran?.Commit();
-                    return true;
+                    finally
+                    {
+                        context.Database.CloseConnection();
+                    }
                 }
                 catch (Exception ex)
                 {
                     LogHelper.Error(_logger, ex);
-                    tran?.Rollback();
                     return optional ? UpdateOnlyDatabaseInfo(version) : false;
                 }
             }
-            
+
             bool UpdateOnlyDatabaseInfo(int version, string description = "[OPTIONAL] Update Failed.")
             {
-                System.Data.Common.DbTransaction? tran = null;
-                const string updQuery = @"INSERT INTO [dbo].[DatabaseInfo] ([Version],[LastModified],[ChangeLog]) VALUES ({0} ,CONVERT(datetime, '{1}'), '{2}')";
                 try
                 {
-                    using (var command = _context.Database.GetDbConnection().CreateCommand())
+                    context.Database.OpenConnection();
+                    try
                     {
-                        command.CommandText = string.Format(updQuery, version, DateTime.Now.ToString("yyyyMMdd HH:mm:ss"), description);
-                        _context.Database.OpenConnection();
-                        tran = _context.Database.GetDbConnection().BeginTransaction();
-                        command.Transaction = tran;
-                        var res = command.ExecuteNonQuery();
+                        using var transaction = context.Database.BeginTransaction();
+                        using var command = context.Database.GetDbConnection().CreateCommand();
+                        command.Transaction = transaction.GetDbTransaction();
+                        command.CommandText = "INSERT INTO [dbo].[DatabaseInfo] ([Version], [LastModified], [ChangeLog]) VALUES (@version, @modified, @description)";
+                        var versionParameter = command.CreateParameter();
+                        versionParameter.ParameterName = "@version";
+                        versionParameter.Value = version;
+                        command.Parameters.Add(versionParameter);
+                        var modifiedParameter = command.CreateParameter();
+                        modifiedParameter.ParameterName = "@modified";
+                        modifiedParameter.Value = DateTime.Now;
+                        command.Parameters.Add(modifiedParameter);
+                        var descriptionParameter = command.CreateParameter();
+                        descriptionParameter.ParameterName = "@description";
+                        descriptionParameter.Value = description;
+                        command.Parameters.Add(descriptionParameter);
+                        command.ExecuteNonQuery();
+                        transaction.Commit();
+                        return true;
                     }
-                    tran?.Commit();
-                    return true;
+                    finally
+                    {
+                        context.Database.CloseConnection();
+                    }
                 }
                 catch (Exception ex)
                 {
                     LogHelper.Error(_logger, ex);
-                    tran?.Rollback();
                     return false;
                 }
             }
@@ -281,6 +297,12 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
                 }
             }
             return updated;
+            }
+            finally
+            {
+                if (!ReferenceEquals(context, _context))
+                    await context.DisposeAsync();
+            }
         }
 
         public void GenerateBacpac()
