@@ -2095,6 +2095,7 @@ namespace AFCS.TOM.Sbme2Server
 
             OracleConnection? connection = null;
             OracleTransaction? transaction = null;
+            var commitAttempted = false;
             try
             {
                 connection = await DBOracleHelper.OpenDBConnection(connectionString);
@@ -2126,10 +2127,13 @@ namespace AFCS.TOM.Sbme2Server
                 foreach (var query in queries)
                     await ExecuteTscDeleteAsync(query, transaction, tscSerial);
 
+                commitAttempted = true;
                 await transaction.CommitAsync();
             }
-            catch
+            catch (Exception ex)
             {
+                if (commitAttempted)
+                    Logger?.Error(ex, $"TSC deletion commit outcome is uncertain for serial {tscSerial}; verify Oracle records before retrying.");
                 if (transaction != null)
                 {
                     try { await transaction.RollbackAsync(); }
