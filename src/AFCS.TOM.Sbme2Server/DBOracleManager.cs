@@ -1591,6 +1591,13 @@ namespace AFCS.TOM.Sbme2Server
 
         public static async Task ForgetTscDocument(string connectionStringSbme, string connectionStringSg, string connectionStringSgUnsafe, long tscSerial)
         {
+            if (string.IsNullOrWhiteSpace(connectionStringSbme) &&
+                string.IsNullOrWhiteSpace(connectionStringSg) &&
+                string.IsNullOrWhiteSpace(connectionStringSgUnsafe))
+            {
+                throw new ArgumentException("At least one Oracle connection string is required.");
+            }
+
             var committedDatabases = new List<string>();
             try
             {
@@ -1875,13 +1882,7 @@ namespace AFCS.TOM.Sbme2Server
                 await RollbackTransactionPreservingErrorAsync(tran1);
                 //if (tran2 != null)
                 //    await tran2.RollbackAsync();
-                if (ex != null)
-                {
-                    var res = ex.InnerException?.Message ?? ex.Message;
-                    if (res == null) throw;
-                    else return res;
-                }
-                return "OK";
+                throw;
             }
             finally
             {
@@ -2040,13 +2041,7 @@ namespace AFCS.TOM.Sbme2Server
                     await RollbackTransactionPreservingErrorAsync(tran1);
                 if (!sgCommitted)
                     await RollbackTransactionPreservingErrorAsync(tran2);
-                if (ex != null)
-                {
-                    var res = ex.InnerException?.Message ?? ex.Message;
-                    if (res == null) throw;
-                    else return res;
-                }
-                return "OK";
+                throw;
             }
             finally
             {

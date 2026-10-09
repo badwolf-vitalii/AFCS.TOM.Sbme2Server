@@ -2061,6 +2061,9 @@ namespace AFCS.TOM.Sbme2Server
 
         public static async Task ForgetTscDocument(string connectionString, string tscSerial)
         {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new ArgumentException("An Oracle connection string is required.", nameof(connectionString));
+
             if (string.IsNullOrWhiteSpace(tscSerial))
                 throw new ArgumentException("TSC serial number cannot be empty.", nameof(tscSerial));
 
@@ -2088,10 +2091,6 @@ namespace AFCS.TOM.Sbme2Server
                 tscSerial = long.Parse(tscSerial, CultureInfo.InvariantCulture)
                     .ToString("X", CultureInfo.InvariantCulture);
             }
-
-            // Retain the optional-connection behavior of this legacy operation.
-            if (string.IsNullOrWhiteSpace(connectionString))
-                return;
 
             OracleConnection? connection = null;
             OracleTransaction? transaction = null;
