@@ -63,18 +63,18 @@ public sealed class StaticTablesRecoveryService : BackgroundService
             await context.Database.OpenConnectionAsync(token);
             try
             {
-            foreach (var file in Directory.EnumerateFiles(folder, "*.json").OrderBy(x => x))
-            {
-                token.ThrowIfCancellationRequested();
-                try
+                foreach (var file in Directory.EnumerateFiles(folder, "*.json").OrderBy(x => x))
                 {
-                    await RestoreTable(context, file, token);
+                    token.ThrowIfCancellationRequested();
+                    try
+                    {
+                        await RestoreTable(context, file, token);
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        _logger.LogError(ex, "Static table recovery failed for {File}", Path.GetFileName(file));
+                    }
                 }
-                catch (Exception ex) when (ex is not OperationCanceledException)
-                {
-                    _logger.LogError(ex, "Static table recovery failed for {File}", Path.GetFileName(file));
-                }
-            }
             }
             finally
             {
