@@ -1309,7 +1309,6 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
                 .Where(p => !ptTransactions.Contains(p.VtTransactionId))
                 .OrderBy(p => p.TransactionTime)
                 .ToList();
-            GetTransactionBasket(transactions.FirstOrDefault());
             return transactions;
         }
 
