@@ -39,7 +39,7 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
         List<BDL.UndonableContract>? GetUndonableContracts(string cardSerialNumber, int shortCardModel, Guid? deviceShiftId, Guid? startFrom, bool undone = false);
         Sales.MostlyUsedTariffs? GetMostlyUsedTariffs(Enums.ArticleType articleType, byte periodInDays);
         int GetTheLongestPeriodOfArticles(Enums.ArticleType articleType);
-        Task<List<SaleTransaction>> GetMissingPtTransactionsAsync();
+        Task<List<SaleTransaction>> GetMissingPtTransactionsAsync(CancellationToken cancellationToken = default);
         Task<SaleTransaction?> GetSaleTransaction(Guid transactionId);
     }
 
@@ -202,7 +202,7 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
             throw new NotImplementedException();
         }
 
-        public Task<List<SaleTransaction>> GetMissingPtTransactionsAsync()
+        public Task<List<SaleTransaction>> GetMissingPtTransactionsAsync(CancellationToken cancellationToken = default)
         {
             throw new NotImplementedException();
         }
