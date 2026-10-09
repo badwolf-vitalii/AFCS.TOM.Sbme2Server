@@ -27,14 +27,16 @@ namespace AFCS.TOM.Sbme2Server
 
         internal static async Task<OracleConnection> OpenDBConnection(string connectionString)
         {
+            var connection = new OracleConnection(connectionString);
             try
             {
-                var connection = new OracleConnection(connectionString);
                 await connection.OpenAsync();
                 return connection;
             }
-            catch
+            catch (Exception ex)
             {
+                await connection.DisposeAsync();
+                NLog.LogManager.GetLogger("Sbme2Server").Error(ex, "Failed to open Oracle connection");
                 return null;
             }
         }
