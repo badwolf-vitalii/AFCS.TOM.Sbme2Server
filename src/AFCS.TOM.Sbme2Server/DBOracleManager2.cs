@@ -2346,12 +2346,20 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch (ExceptionContainer)
             {
+                if (transaction != null)
+                {
+                    try { transaction.Rollback(); }
+                    catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
+                }
                 throw;
             }
             catch (Exception ex)
             {
                 if (transaction != null)
-                    transaction.Rollback();
+                {
+                    try { transaction.Rollback(); }
+                    catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
+                }
                 ExHelper.ThrowExceptionContainer(ex, "BlacklistMedia", cmdString);
                 throw;
             }
