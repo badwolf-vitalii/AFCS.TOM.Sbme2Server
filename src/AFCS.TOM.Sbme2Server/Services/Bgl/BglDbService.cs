@@ -167,6 +167,8 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
             DatabaseInfo? dbInfo = null;
 
             var context = GetDbContext();
+            try
+            {
 
             try
             {
@@ -295,6 +297,12 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
                 }
             }
             return updated;
+            }
+            finally
+            {
+                if (!ReferenceEquals(context, _context))
+                    await context.DisposeAsync();
+            }
         }
 
         public void GenerateBacpac()
