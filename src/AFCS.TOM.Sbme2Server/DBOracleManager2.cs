@@ -2396,10 +2396,7 @@ namespace AFCS.TOM.Sbme2Server
                         var res = await cmd.ExecuteNonQueryAsync();
 
                         if (res == 1)
-                        {
-                            transaction.Commit();
                             return true;
-                        }
                         else throw new Exception("Insert document in history detail failed");
                     }
                 }
@@ -2415,8 +2412,7 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch (Exception ex)
             {
-                if (transaction != null)
-                    transaction.Rollback();
+                // The caller owns the transaction and is responsible for rollback.
                 ExHelper.ThrowExceptionContainer(ex, "ArchiveTSCDocument", cmdString);
                 throw;
             }
