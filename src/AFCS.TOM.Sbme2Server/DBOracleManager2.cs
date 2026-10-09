@@ -2415,7 +2415,8 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                if (transaction != null)
+                    transaction.Rollback();
                 ExHelper.ThrowExceptionContainer(ex, "ArchiveTSCDocument", cmdString);
                 throw;
             }
@@ -3067,7 +3068,8 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                if (transaction != null)
+                    transaction.Rollback();
                 ExHelper.ThrowExceptionContainer(ex, "InsertCustomer", cmdString);
                 throw;
             }
@@ -3285,7 +3287,8 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                if (transaction != null)
+                    transaction.Rollback();
                 ExHelper.ThrowExceptionContainer(ex, "InsertCustomer", cmdString);
                 throw;
             }
@@ -3426,7 +3429,8 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                if (transaction != null)
+                    transaction.Rollback();
                 ExHelper.ThrowExceptionContainer(ex, "InsertCustomer", cmdString);
                 throw;
             }
