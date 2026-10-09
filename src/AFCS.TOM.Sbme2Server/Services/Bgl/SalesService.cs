@@ -1281,9 +1281,9 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
         public int GetTheLongestPeriodOfArticles(Enums.ArticleType articleType)
         {
             var res = _context.Articles
-                ?.Where(p => p.SaleTransaction != null && p.ArticleType == (int)articleType)
-                ?.Include("SaleTransaction")
-                ?.Min(p => p.SaleTransaction.TransactionTime);
+                .Where(p => p.SaleTransaction != null && p.ArticleType == (int)articleType)
+                .Select(p => (DateTime?)p.SaleTransaction.TransactionTime)
+                .Min();
             if (res.HasValue)
             {
                 var diff = DateTime.Today - TrimTime(res.Value);
