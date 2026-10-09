@@ -2121,6 +2121,7 @@ namespace AFCS.TOM.Sbme2Server
                         {
                             LogHelper.Error(Logger, ex);
                             LogHelper.Error(Logger, query);
+                            throw;
                         }
                     }
 
@@ -2157,6 +2158,7 @@ namespace AFCS.TOM.Sbme2Server
                         {
                             LogHelper.Error(Logger, ex);
                             LogHelper.Error(Logger, query);
+                            throw;
                         }
                     }
 
