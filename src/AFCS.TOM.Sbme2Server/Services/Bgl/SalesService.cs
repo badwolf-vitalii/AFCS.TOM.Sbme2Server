@@ -358,14 +358,8 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
         {
             ArgumentNullException.ThrowIfNull(transaction);
 
-            // A client may retry after a network timeout even when the first commit succeeded.
-            // Use the same business key as CheckIfPtTransactionExists to avoid duplicate rows.
-            var existingId = await _context.PtConfirmTransactions
-                .Where(p => p.TransactionNumber == transaction.TransactionNumber &&
-                    p.CodiceEsattoria == transaction.CodiceEsattoria &&
-                    p.CodiceRivendita == transaction.CodiceRivendita)
-                .Select(p => (Guid?)p.Id)
-                .FirstOrDefaultAsync();
+            // Check both the persisted ID and the business key to handle client retries.
+            var existingId = await FindExistingPtTransactionId(transaction);
             if (existingId.HasValue)
                 return existingId.Value;
 
@@ -407,11 +401,28 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
 
         public async Task<bool> CheckIfPtTransactionExists(PtConfirmTransaction transaction)
         {
-            var result = await _context.PtConfirmTransactions.AnyAsync(p =>
-                p.TransactionNumber == transaction.TransactionNumber &&
-                p.CodiceEsattoria == transaction.CodiceEsattoria &&
-                p.CodiceRivendita.Equals(transaction.CodiceRivendita));
-            return result;
+            ArgumentNullException.ThrowIfNull(transaction);
+            return (await FindExistingPtTransactionId(transaction)).HasValue;
+        }
+
+        private async Task<Guid?> FindExistingPtTransactionId(PtConfirmTransaction transaction)
+        {
+            if (transaction.Id != Guid.Empty)
+            {
+                var matchingId = await _context.PtConfirmTransactions
+                    .Where(p => p.Id == transaction.Id)
+                    .Select(p => (Guid?)p.Id)
+                    .FirstOrDefaultAsync();
+                if (matchingId.HasValue)
+                    return matchingId;
+            }
+
+            return await _context.PtConfirmTransactions
+                .Where(p => p.TransactionNumber == transaction.TransactionNumber &&
+                    p.CodiceEsattoria == transaction.CodiceEsattoria &&
+                    p.CodiceRivendita == transaction.CodiceRivendita)
+                .Select(p => (Guid?)p.Id)
+                .FirstOrDefaultAsync();
         }
 
         public IEnumerable<Basket.Article> GetSoldArticles(string serialNumber, bool includeVTokens, int top)
@@ -1298,17 +1309,17 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
             return res;
         }
 
-        public List<SaleTransaction> GetMissingPtTransactions()
+        public async Task<List<SaleTransaction>> GetMissingPtTransactionsAsync(CancellationToken cancellationToken = default)
         {
-            var ptTransactions = _context.PtConfirmTransactions
-                .Where(p => !_context.SaleTransactions.Any(q => q.VtTransactionId == p.TransactionNumber.ToString()))
-                .Select(p => p.TransactionNumber.ToString())
-                .ToList();
-            var transactions = _context.SaleTransactions
-                .Where(p => p.SentDateTime.Value < DateTime.Today && !string.IsNullOrWhiteSpace(p.VtTransactionId))
-                .Where(p => !ptTransactions.Contains(p.VtTransactionId))
+            // A sale is missing its PT confirmation when its transaction number
+            // is absent from the confirmation table.
+            var transactions = await _context.SaleTransactions
+                .AsNoTracking()
+                .Where(p => p.SentDateTime.HasValue && p.SentDateTime.Value < DateTime.Today && !string.IsNullOrWhiteSpace(p.VtTransactionId))
+                .Where(p => !_context.PtConfirmTransactions
+                    .Any(confirmation => confirmation.TransactionNumber.ToString() == p.VtTransactionId))
                 .OrderBy(p => p.TransactionTime)
-                .ToList();
+                .ToListAsync(cancellationToken);
             return transactions;
         }
 
