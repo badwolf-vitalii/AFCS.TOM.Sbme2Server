@@ -1313,14 +1313,10 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
         {
             // A sale is missing its PT confirmation when its transaction number
             // is absent from the confirmation table.
-            var confirmedTransactionNumbers = _context.PtConfirmTransactions
-                .Select(p => p.TransactionNumber)
-                .ToList()
-                .Select(number => number.ToString())
-                .ToHashSet();
             var transactions = _context.SaleTransactions
                 .Where(p => p.SentDateTime.HasValue && p.SentDateTime.Value < DateTime.Today && !string.IsNullOrWhiteSpace(p.VtTransactionId))
-                .Where(p => !confirmedTransactionNumbers.Contains(p.VtTransactionId))
+                .Where(p => !_context.PtConfirmTransactions
+                    .Any(confirmation => confirmation.TransactionNumber.ToString() == p.VtTransactionId))
                 .OrderBy(p => p.TransactionTime)
                 .ToList();
             return transactions;
