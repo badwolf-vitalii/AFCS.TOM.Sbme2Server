@@ -1309,16 +1309,17 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
             return res;
         }
 
-        public List<SaleTransaction> GetMissingPtTransactions()
+        public async Task<List<SaleTransaction>> GetMissingPtTransactionsAsync()
         {
             // A sale is missing its PT confirmation when its transaction number
             // is absent from the confirmation table.
             var transactions = _context.SaleTransactions
+                .AsNoTracking()
                 .Where(p => p.SentDateTime.HasValue && p.SentDateTime.Value < DateTime.Today && !string.IsNullOrWhiteSpace(p.VtTransactionId))
                 .Where(p => !_context.PtConfirmTransactions
                     .Any(confirmation => confirmation.TransactionNumber.ToString() == p.VtTransactionId))
                 .OrderBy(p => p.TransactionTime)
-                .ToList();
+                .ToListAsync();
             return transactions;
         }
 
