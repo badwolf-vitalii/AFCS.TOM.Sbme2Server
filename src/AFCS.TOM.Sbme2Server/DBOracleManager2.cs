@@ -1805,7 +1805,9 @@ namespace AFCS.TOM.Sbme2Server
                     }
                     catch
                     {
-                        transaction.Rollback();
+                        try { transaction.Rollback(); }
+
+                        catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
                         throw;
                     }
                 }
@@ -1862,7 +1864,9 @@ namespace AFCS.TOM.Sbme2Server
                     }
                     catch
                     {
-                        transaction.Rollback();
+                        try { transaction.Rollback(); }
+
+                        catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
                         throw;
                     }
                 }
@@ -2716,7 +2720,9 @@ namespace AFCS.TOM.Sbme2Server
                         }
                         catch (Exception ex)
                         {
-                            transaction.Rollback();
+                            try { transaction.Rollback(); }
+
+                            catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
                             throw;
                         }
                     }
@@ -2904,7 +2910,9 @@ namespace AFCS.TOM.Sbme2Server
                         }
                         catch (Exception ex)
                         {                 
-                            transaction.Rollback();
+                            try { transaction.Rollback(); }
+                 
+                            catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
                             throw;
                         }
                     }
