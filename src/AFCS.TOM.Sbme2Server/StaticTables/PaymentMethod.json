@@ -1,0 +1,30 @@
+[
+    {
+        "Code": 0,
+        "Name": "None"
+    },
+    {
+        "Code": 1,
+        "Name": "Contanti"
+    },
+    {
+        "Code": 2,
+        "Name": "POS"
+    },
+    {
+        "Code": 3,
+        "Name": "Voucher"
+    },
+    {
+        "Code": 7,
+        "Name": "Receipt"
+    },
+    {
+        "Code": 9,
+        "Name": "Bonifico"
+    },
+    {
+        "Code": 15,
+        "Name": "PAYROLL"
+    }
+]

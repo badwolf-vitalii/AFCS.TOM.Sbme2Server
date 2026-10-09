@@ -1,0 +1,10 @@
+[
+    {
+        "Code": 0,
+        "Name": "Mifare"
+    },
+    {
+        "Code": 1,
+        "Name": "CD97"
+    }
+]

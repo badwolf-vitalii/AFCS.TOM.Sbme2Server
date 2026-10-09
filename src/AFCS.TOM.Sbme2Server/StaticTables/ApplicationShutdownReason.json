@@ -1,0 +1,66 @@
+[
+    {
+        "Code": 0,
+        "Name": "Unknown"
+    },
+    {
+        "Code": 1,
+        "Name": "Another"
+    },
+    {
+        "Code": 2,
+        "Name": "Software Update"
+    },
+    {
+        "Code": 3,
+        "Name": "Blocked by Busy Indicator"
+    },
+    {
+        "Code": 4,
+        "Name": "Card detecting slow down"
+    },
+    {
+        "Code": 5,
+        "Name": "Card reading/writing slow down"
+    },
+    {
+        "Code": 6,
+        "Name": "Ticket printer issue"
+    },
+    {
+        "Code": 7,
+        "Name": "Pos terminal issue"
+    },
+    {
+        "Code": 8,
+        "Name": "Receipt printer issue"
+    },
+    {
+        "Code": 9,
+        "Name": "No available tariffs"
+    },
+    {
+        "Code": 10,
+        "Name": "Agent shift issue"
+    },
+    {
+        "Code": 11,
+        "Name": "Basket issue"
+    },
+    {
+        "Code": 12,
+        "Name": "VTS Server unreachable"
+    },
+    {
+        "Code": 13,
+        "Name": "DSDE Server unreachable"
+    },
+    {
+        "Code": 14,
+        "Name": "SBME/AFCS Server unreachable"
+    },
+    {
+        "Code": 15,
+        "Name": "Cavalleri Service unreachable"
+    }
+]

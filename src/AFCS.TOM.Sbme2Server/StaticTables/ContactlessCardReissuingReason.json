@@ -1,0 +1,42 @@
+[
+    {
+        "Code": 1,
+        "Name": "Smarrimento"
+    },
+    {
+        "Code": 2,
+        "Name": "Furto"
+    },
+    {
+        "Code": 3,
+        "Name": "Guasto"
+    },
+    {
+        "Code": 4,
+        "Name": "Guasto Volontario"
+    },
+    {
+        "Code": 101,
+        "Name": "Furto"
+    },
+    {
+        "Code": 102,
+        "Name": "Smarrimento"
+    },
+    {
+        "Code": 103,
+        "Name": "Guasto"
+    },
+    {
+        "Code": 104,
+        "Name": "Scadenza"
+    },
+    {
+        "Code": 105,
+        "Name": "Guasto Volontario"
+    },
+    {
+        "Code": 255,
+        "Name": "Scadenza"
+    }
+]

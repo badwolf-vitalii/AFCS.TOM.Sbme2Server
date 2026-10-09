@@ -1,0 +1,54 @@
+[
+    {
+        "Code": 0,
+        "Name": "Unknown"
+    },
+    {
+        "Code": 1,
+        "Name": "Contract"
+    },
+    {
+        "Code": 2,
+        "Name": "MagneticTicket"
+    },
+    {
+        "Code": 3,
+        "Name": "ContactlessCardIssued"
+    },
+    {
+        "Code": 4,
+        "Name": "ContactlessCardReissued"
+    },
+    {
+        "Code": 5,
+        "Name": "ContactlessCardRefund"
+    },
+    {
+        "Code": 6,
+        "Name": "ProfileRenewal"
+    },
+    {
+        "Code": 7,
+        "Name": "UndoneContract"
+    },
+    {
+        "Code": 8,
+        "Name": "UndoneMagneticTicket"
+    },
+    {
+        "Code": 9,
+        "Name": "PtItem"
+    },
+    {
+        "Code": 10,
+        "Name": "UndonePtItem"
+    },
+    {
+        "Code": 11,
+        "Name": "JammedTicket"
+    },
+    {
+        "Code": 12,
+        "Name": "CardExpirationExtension"
+    }
+]

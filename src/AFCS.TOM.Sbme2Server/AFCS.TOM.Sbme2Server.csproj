@@ -21,6 +21,17 @@
 
 	<ItemGroup>
 	  <Content Remove="Crypt\AFCS.TOM.Crypt.deps.json" />
+	  <Content Remove="StaticTables\AgentShiftState.json" />
+	  <Content Remove="StaticTables\ApplicationShutdownReason.json" />
+	  <Content Remove="StaticTables\ArticleType.json" />
+	  <Content Remove="StaticTables\CardAnomalyType.json" />
+	  <Content Remove="StaticTables\CommandAttachmentType.json" />
+	  <Content Remove="StaticTables\ContactlessCardReissuingReason.json" />
+	  <Content Remove="StaticTables\CscType.json" />
+	  <Content Remove="StaticTables\PaymentMethod.json" />
+	  <Content Remove="StaticTables\PtItemType.json" />
+	  <Content Remove="StaticTables\SbmeProfilePriceMapping.json" />
+	  <Content Remove="StaticTables\SellingDataSendStatus.json" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -618,6 +629,39 @@
 	
   <ItemGroup>
     <None Include="Crypt\AFCS.TOM.Crypt.deps.json" />
+    <None Include="StaticTables\AgentShiftState.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="StaticTables\ApplicationShutdownReason.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="StaticTables\ArticleType.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="StaticTables\CardAnomalyType.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="StaticTables\CommandAttachmentType.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="StaticTables\ContactlessCardReissuingReason.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="StaticTables\CscType.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="StaticTables\PaymentMethod.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="StaticTables\PtItemType.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="StaticTables\SbmeProfilePriceMapping.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="StaticTables\SellingDataSendStatus.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 	
 	

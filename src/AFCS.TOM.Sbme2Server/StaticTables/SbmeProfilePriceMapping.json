@@ -1,0 +1,67 @@
+[
+    {
+        "ProfileId": 0,
+        "IssuingReasonCode": 1,
+        "IssuingPrice": 1500
+    },
+    {
+        "ProfileId": 0,
+        "IssuingReasonCode": 2,
+        "IssuingPrice": 1500
+    },
+    {
+        "ProfileId": 0,
+        "IssuingReasonCode": 3,
+        "IssuingPrice": 0
+    },
+    {
+        "ProfileId": 2,
+        "IssuingReasonCode": 1,
+        "IssuingPrice": 1000
+    },
+    {
+        "ProfileId": 2,
+        "IssuingReasonCode": 2,
+        "IssuingPrice": 1000
+    },
+    {
+        "ProfileId": 69,
+        "IssuingReasonCode": 1,
+        "IssuingPrice": 1000
+    },
+    {
+        "ProfileId": 69,
+        "IssuingReasonCode": 2,
+        "IssuingPrice": 1000
+    },
+    {
+        "ProfileId": 70,
+        "IssuingReasonCode": 1,
+        "IssuingPrice": 1000
+    },
+    {
+        "ProfileId": 70,
+        "IssuingReasonCode": 2,
+        "IssuingPrice": 1000
+    },
+    {
+        "ProfileId": 98,
+        "IssuingReasonCode": 1,
+        "IssuingPrice": 1000
+    },
+    {
+        "ProfileId": 98,
+        "IssuingReasonCode": 1,
+        "IssuingPrice": 1000
+    },
+    {
+        "ProfileId": 100,
+        "IssuingReasonCode": 1,
+        "IssuingPrice": 1000
+    },
+    {
+        "ProfileId": 100,
+        "IssuingReasonCode": 2,
+        "IssuingPrice": 1000
+    }
+]
