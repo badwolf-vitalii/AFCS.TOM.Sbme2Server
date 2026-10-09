@@ -51,6 +51,12 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
         {
             if (transaction == null || (transaction.DeviceShift == null && transaction.DeviceShiftId.Equals(Guid.Empty)) || transaction.PaymentDetails == null) return Guid.Empty;
 
+            // A successful commit may be retried after the response is lost.
+            // Preserve the original transaction rather than inserting it again.
+            if (transaction.Id != Guid.Empty &&
+                await _context.SaleTransactions.AnyAsync(p => p.Id == transaction.Id))
+                return transaction.Id;
+
             if (transaction.Id.Equals(Guid.Empty))
                 transaction.Id = Guid.NewGuid();
 
@@ -178,6 +184,12 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
         public async Task<Guid> CommitSaleTransactionB2(SaleTransaction transaction)
         {
             if (transaction == null || (transaction.DeviceShift == null && transaction.DeviceShiftId.Equals(Guid.Empty)) || transaction.PaymentDetails == null) return Guid.Empty;
+
+            // A successful commit may be retried after the response is lost.
+            // Preserve the original transaction rather than inserting it again.
+            if (transaction.Id != Guid.Empty &&
+                await _context.SaleTransactions.AnyAsync(p => p.Id == transaction.Id))
+                return transaction.Id;
 
             if (transaction.Id.Equals(Guid.Empty))
                 transaction.Id = Guid.NewGuid();
