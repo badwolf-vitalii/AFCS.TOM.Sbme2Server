@@ -82,7 +82,9 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
             var position = 1; // 0 - resered and is not used
             if (articles?.Any() ?? false)
             {
-                foreach (var article in articles)
+                // Enumerate a snapshot because duplicate articles may be removed from
+                // transaction.Articles while processing the sale.
+                foreach (var article in articles.ToList())
                 {
                     article.Position = position++;
                     article.SaleTransactionId = article.SaleTransactionId ?? transaction.Id;
@@ -218,7 +220,9 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
             var existingTransactionId = Guid.Empty;
             if (articles?.Any() ?? false)
             {
-                foreach (var article in articles)
+                // Enumerate a snapshot because duplicate articles may be removed from
+                // transaction.Articles while processing the sale.
+                foreach (var article in articles.ToList())
                 {
                     article.Position = position++;
                     article.SaleTransactionId = article.SaleTransactionId ?? transaction.Id;
