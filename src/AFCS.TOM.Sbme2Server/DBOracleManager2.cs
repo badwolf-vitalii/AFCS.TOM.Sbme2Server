@@ -292,7 +292,8 @@ namespace AFCS.TOM.Sbme2Server
                     }
                     catch
                     {
-                        transaction.Rollback();
+                        try { transaction.Rollback(); }
+                        catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
                         throw;
                     }
                 }
@@ -2369,6 +2370,7 @@ namespace AFCS.TOM.Sbme2Server
             }
             finally
             {
+                transaction?.Dispose();
                 if ((connection?.State ?? ConnectionState.Closed) != ConnectionState.Closed)
                     await DBOracleHelper.CloseDBConnection(connection);
             }
@@ -2558,17 +2560,26 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch (ExceptionContainer)
             {
+                if (transaction != null)
+                {
+                    try { transaction.Rollback(); }
+                    catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
+                }
                 throw;
             }
             catch (Exception ex)
             {
                 if (transaction != null)
-                    transaction.Rollback();
+                {
+                    try { transaction.Rollback(); }
+                    catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
+                }
                 ExHelper.ThrowExceptionContainer(ex, "BlacklistContract", cmdString);
                 throw;
             }
             finally
             {
+                transaction?.Dispose();
                 if ((connection?.State ?? ConnectionState.Closed) != ConnectionState.Closed)
                     await DBOracleHelper.CloseDBConnection(connection);
             }
