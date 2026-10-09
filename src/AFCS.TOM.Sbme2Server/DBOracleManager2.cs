@@ -2219,11 +2219,15 @@ namespace AFCS.TOM.Sbme2Server
             catch
             {
                 if (transaction != null)
-                    await transaction.RollbackAsync();
+                {
+                    try { await transaction.RollbackAsync(); }
+                    catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
+                }
                 throw;
             }
             finally
             {
+                transaction?.Dispose();
                 if (connection != null && connection.State != ConnectionState.Closed)
                 {
                     await DBOracleHelper.CloseDBConnection(connection);
@@ -2629,7 +2633,8 @@ namespace AFCS.TOM.Sbme2Server
                         }
                         catch (Exception ex)
                         {
-                            transaction.Rollback();
+                            try { transaction.Rollback(); }
+                            catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
                             throw;
                         }
                     }
