@@ -576,7 +576,7 @@ namespace AFCS.TOM.Sbme2Server
             var cmdString = string.Empty;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.GetShortCardModel();

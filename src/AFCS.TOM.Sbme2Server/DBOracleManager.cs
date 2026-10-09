@@ -40,7 +40,7 @@ namespace AFCS.TOM.Sbme2Server
             var retValue = false;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.DeleteHolder();
@@ -71,7 +71,7 @@ namespace AFCS.TOM.Sbme2Server
             var retValue = (uint)0;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.GetNextCustomerId();
@@ -111,7 +111,7 @@ namespace AFCS.TOM.Sbme2Server
                 customer.HolderPhoto = photoTmp;
                 customer.HolderSignature = signatureTmp;
 
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 tran = connection.BeginTransaction();
@@ -198,7 +198,7 @@ namespace AFCS.TOM.Sbme2Server
             OracleTransaction tran = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 tran = connection.BeginTransaction();
@@ -246,7 +246,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 var customers = new List<Customer>();
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var sB = new StringBuilder();
@@ -322,7 +322,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 var crpList = new List<ProfileRequestCode>();
-                connection = DBOracleHelper.OpenDBConnection(confownConnectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(confownConnectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(confownConnectionString);
                 var query = Queries.GetLayoutsU();
@@ -357,7 +357,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 var profiles = new List<HolderProfile>();
-                connection = DBOracleHelper.OpenDBConnection(tarifownConnectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(tarifownConnectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(tarifownConnectionString);
                 var query = Queries.GetHolderProfiles();
@@ -397,7 +397,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 var profiles = new List<HolderProfileDescription>();
-                connection = DBOracleHelper.OpenDBConnection(tarifownConnectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(tarifownConnectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(tarifownConnectionString);
                 var query = Queries.GetAllHolderProfilesDescriptions();
@@ -435,7 +435,7 @@ namespace AFCS.TOM.Sbme2Server
             {
                 var crpList = new List<ProfileRequestCode>();
                 var crpsWithMaps = new List<ProfileRequestCodeWithMap>();
-                connection = DBOracleHelper.OpenDBConnection(tarifownConnectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(tarifownConnectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(tarifownConnectionString);
                 var query = Queries.GetProfileRequestsByProviderIdWithMaps();
@@ -478,7 +478,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 var profiles = new List<ProfileRequestMap>();
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.ProfileRequestMap();
@@ -514,7 +514,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 var profiles = new List<ProfileRequestMap>();
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.ProfileRequestMapByProfileId();
@@ -570,7 +570,7 @@ namespace AFCS.TOM.Sbme2Server
                     ProfileEndValidityDates = null
                 };
 
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.InsertTscRequest();
@@ -686,7 +686,7 @@ namespace AFCS.TOM.Sbme2Server
             OracleConnection connection = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.UpdateHolderStatus();
@@ -715,7 +715,7 @@ namespace AFCS.TOM.Sbme2Server
             OracleConnection connection = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.UpdateTscRequestStatus();
@@ -744,7 +744,7 @@ namespace AFCS.TOM.Sbme2Server
             OracleConnection connection = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.UpdateTscRequestCheckCode();
@@ -774,7 +774,7 @@ namespace AFCS.TOM.Sbme2Server
             OracleConnection connection = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.UpdateTscRequestCheckCodeWithStatus();
@@ -806,7 +806,7 @@ namespace AFCS.TOM.Sbme2Server
             var retValue = -3;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 //using var cmd = new OracleCommand("REQCHECKDSDE", connection)
@@ -844,7 +844,7 @@ namespace AFCS.TOM.Sbme2Server
             var result = false;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.UpdateCardStatus();
@@ -877,7 +877,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 var profiles = new List<CardLayout>();
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.Layouts();
@@ -913,7 +913,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 var customer = new Customer();
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.GetCustomerByHolderID();
@@ -946,7 +946,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 Card card = null;
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.GetCard();
@@ -980,7 +980,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 var cards = new List<Card>();
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.GetCardsByHolderID();
@@ -1017,7 +1017,7 @@ namespace AFCS.TOM.Sbme2Server
             var retValue = 0;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var query = Queries.GetShortCardModel();
@@ -1046,7 +1046,7 @@ namespace AFCS.TOM.Sbme2Server
             TscBuildDatesProcedure retValue = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 using (var cmd = new OracleCommand("TSCBUILDVALIDITYDATE", connection))
@@ -1095,7 +1095,7 @@ namespace AFCS.TOM.Sbme2Server
             OracleConnection connection = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var arrProfiles0 = new[]
@@ -1145,7 +1145,7 @@ namespace AFCS.TOM.Sbme2Server
             ProfileValidityEndDateProcedure retValue = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 using (var cmd = new OracleCommand("PROFILEBUILDVALIDITYDATE", connection))
@@ -1184,7 +1184,7 @@ namespace AFCS.TOM.Sbme2Server
             var retValue = (uint)0;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 var physical = string.IsNullOrWhiteSpace(saleDeviceid);
@@ -1218,7 +1218,7 @@ namespace AFCS.TOM.Sbme2Server
             try
             {
                 var query = Queries.GetTDSDEContracts();
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
 
@@ -1298,7 +1298,7 @@ namespace AFCS.TOM.Sbme2Server
             OracleConnection connection = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
 
@@ -1351,7 +1351,7 @@ namespace AFCS.TOM.Sbme2Server
             GetProfileExtensionDetails retValue = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 using var cmd = new OracleCommand("Profile_Extension", connection);
@@ -1420,7 +1420,7 @@ namespace AFCS.TOM.Sbme2Server
             OracleConnection connection = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 using var cmd = new OracleCommand("Stolen_lost", connection);
@@ -1460,7 +1460,7 @@ namespace AFCS.TOM.Sbme2Server
             OracleTransaction? tran = null;
             try
             {
-                connection = DBOracleHelper.OpenDBConnection(connectionString).Result;
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
                 if (connection == null)
                     throw new DBConnectionOpeningException(connectionString);
                 result = true;
@@ -1524,7 +1524,7 @@ namespace AFCS.TOM.Sbme2Server
             {
                 if (!string.IsNullOrWhiteSpace(connectionStringSbme))
                 {
-                    connection = DBOracleHelper.OpenDBConnection(connectionStringSbme).Result;
+                    connection = await DBOracleHelper.OpenDBConnection(connectionStringSbme);
                     if (connection == null)
                         throw new DBConnectionOpeningException(connectionStringSbme);
                     var query = $"DELETE FROM GESTOWN.TSC_DOCUMENTS WHERE TSCSERIALNO='{tscSerial}'";
@@ -1537,7 +1537,7 @@ namespace AFCS.TOM.Sbme2Server
 
                 if (!string.IsNullOrWhiteSpace(connectionStringSgUnsafe))
                 {
-                    connection = DBOracleHelper.OpenDBConnection(connectionStringSgUnsafe).Result;
+                    connection = await DBOracleHelper.OpenDBConnection(connectionStringSgUnsafe);
                     if (connection == null)
                         throw new DBConnectionOpeningException(connectionStringSgUnsafe);
                     var query = $"DELETE FROM SG_dsdemh.TSC_DOCUMENTS WHERE TSCSERIALNO='{tscSerial}'";
@@ -1597,7 +1597,7 @@ namespace AFCS.TOM.Sbme2Server
 
                 if (!string.IsNullOrWhiteSpace(connectionStringSg))
                 {
-                    connection = DBOracleHelper.OpenDBConnection(connectionStringSg).Result;
+                    connection = await DBOracleHelper.OpenDBConnection(connectionStringSg);
                     if (connection == null)
                         throw new DBConnectionOpeningException(connectionStringSg);
                     
@@ -1661,10 +1661,10 @@ namespace AFCS.TOM.Sbme2Server
                 var cs2 = !string.IsNullOrWhiteSpace(connectionStringSgUnsafe);
                 if (cs1 && cs2)
                 {
-                    connection1 = DBOracleHelper.OpenDBConnection(connectionStringSbme).Result;
+                    connection1 = await DBOracleHelper.OpenDBConnection(connectionStringSbme);
                     if (connection1 == null)
                         throw new DBConnectionOpeningException(connectionStringSbme);
-                    //connection2 = DBOracleHelper.OpenDBConnection(connectionStringSgUnsafe).Result;
+                    //connection2 = await DBOracleHelper.OpenDBConnection(connectionStringSgUnsafe);
                     //if (connection2 == null)
                     //    throw new DBConnectionOpeningException(connectionStringSgUnsafe);
                     tran1 = connection1.BeginTransaction();
@@ -1918,10 +1918,10 @@ namespace AFCS.TOM.Sbme2Server
                 var cs2 = !string.IsNullOrWhiteSpace(connectionStringSgUnsafe);
                 if (cs1 && cs2)
                 {
-                    connection1 = DBOracleHelper.OpenDBConnection(connectionStringSbme).Result;
+                    connection1 = await DBOracleHelper.OpenDBConnection(connectionStringSbme);
                     if (connection1 == null)
                         throw new DBConnectionOpeningException(connectionStringSbme);
-                    connection2 = DBOracleHelper.OpenDBConnection(connectionStringSgUnsafe).Result;
+                    connection2 = await DBOracleHelper.OpenDBConnection(connectionStringSgUnsafe);
                     if (connection2 == null)
                         throw new DBConnectionOpeningException(connectionStringSgUnsafe);
                     tran1 = connection1.BeginTransaction();
