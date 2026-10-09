@@ -106,45 +106,50 @@ if (Directory.Exists(tnsnamesPath))
 
         KeysManager.LocalDbKeyIndex = 0;
         var connectionString = string.Empty;
-        if ((KeysManager.LocalDbKeys?.Length ?? 0) > 0)
+        var localDbKeys = KeysManager.LocalDbKeys;
+        if (localDbKeys is { Length: > 0 })
         {
-            _logger.Debug($"LocalDbKeys: {string.Join(",", KeysManager.LocalDbKeys!)}");
-        }
-        do
-        {
-            if ((KeysManager.LocalDbKeys?.Length ?? 0) > 0)
+            _logger.Debug($"LocalDbKeys: {string.Join(",", localDbKeys)}");
+
+            var validKeyFound = false;
+            for (var index = 0; index < localDbKeys.Length; index++)
             {
-                var dbctx = new DataLayerContext(dataLayerConfiguration.ConnectionString);
+                KeysManager.LocalDbKeyIndex = checked((byte)index);
+                var key = localDbKeys[index];
+                await using var dbctx = new DataLayerContext(dataLayerConfiguration.ConnectionString);
                 try
                 {
-                    _logger.Debug($"Trying key #{KeysManager.LocalDbKeys![KeysManager.LocalDbKeyIndex]}");
-                    var dbVer = await dbctx.DatabaseInfos.OrderByDescending(p => p.Version).FirstOrDefaultAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
-                    if (dbVer != null)
+                    _logger.Debug($"Trying key #{key}");
+                    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                    var dbVer = await dbctx.DatabaseInfos
+                        .OrderByDescending(p => p.Version)
+                        .FirstOrDefaultAsync(timeout.Token);
+                    if (dbVer == null)
                     {
-                        _logger?.Debug($"Key #{KeysManager.LocalDbKeys![KeysManager.LocalDbKeyIndex]} - OK");
-                        break;
+                        _logger.Warn($"Key #{key} - database information was not found");
+                        continue;
                     }
-                    else
-                    {
-                        ++KeysManager.LocalDbKeyIndex;
-                    }
+
+                    _logger.Debug($"Key #{key} - OK");
+                    validKeyFound = true;
+                    break;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    _logger?.Error($"Key #{KeysManager.LocalDbKeys![KeysManager.LocalDbKeyIndex]} - NOT OK");
-                    ++KeysManager.LocalDbKeyIndex;
-                }
-                finally
-                {
-                    await dbctx.DisposeAsync();
+                    _logger.Warn(ex, $"Key #{key} - NOT OK");
                 }
             }
+
+            if (!validKeyFound)
+            {
+                KeysManager.LocalDbKeyIndex = 0;
+                const string message = "Unable to open the BGL database with any configured local database key.";
+                _logger.Error(message);
+                throw new InvalidOperationException(message);
+            }
         }
-        while (KeysManager.LocalDbKeyIndex != 0);
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            connectionString = dataLayerConfiguration.ConnectionString;
-        }
+
+        connectionString = dataLayerConfiguration.ConnectionString;
         builder.Services.AddScoped((sp) => { return new DataLayerContext(connectionString); });
         
         builder.Services.AddScoped<Bgl.ISalesThresholdsService, Bgl.SalesThresholdsService>();
