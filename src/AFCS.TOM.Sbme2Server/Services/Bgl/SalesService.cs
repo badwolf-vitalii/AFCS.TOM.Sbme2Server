@@ -1301,7 +1301,7 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
         public List<SaleTransaction> GetMissingPtTransactions()
         {
             var ptTransactions = _context.PtConfirmTransactions
-                .Where(p => !_context.SaleTransactions.Any(q => q.VtTransactionId.Equals(p.TransactionNumber)))
+                .Where(p => !_context.SaleTransactions.Any(q => q.VtTransactionId == p.TransactionNumber.ToString()))
                 .Select(p => p.TransactionNumber.ToString())
                 .ToList();
             var transactions = _context.SaleTransactions
