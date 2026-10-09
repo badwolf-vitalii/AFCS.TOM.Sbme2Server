@@ -1,0 +1,35 @@
+﻿~SKP~#00:32#
+--------------------------------
+~SKP~     ANNULLO CONTRATTO TSC
+--------------------------------
+#01:04#                  #02:27#
+AgentID                  #03:24#
+Prog.Turno               #04:21#
+Chip ID                  #05:24#
+Cliente No.              #06:20#
+Data di Nascita          #07:16#
+================================
+~INVOICE1~
+================================
+TARIFFA                  #08:24#
+#09:32#
+Contratto                #10:22#
+Classe passeggero        #11:14#
+Origine                  #12:24#
+Destinazione             #13:19#
+Via                      #14:28#
+Via2                     #15:27#
+Inizio validita          #16:16#
+Fine validita            #17:18#
+Limite utilizzo          #18:16#
+Zone                     #19:27#
+TOT.VIAGGI               #20:21#
+================================
+TOT.PREZZO (Euro)        #21:14#
+================================
+        TIPI DI RIMBORSO
+#22:32#
+================================
+#DateTimeNow#32#
+--------------------------------
+

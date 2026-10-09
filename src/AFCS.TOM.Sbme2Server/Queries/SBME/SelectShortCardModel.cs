@@ -1,0 +1,7 @@
+﻿namespace AFCS.TOM.Sbme2Server.SBME
+{
+    static partial class Queries
+    {
+        private const string _shortCardModel = @"SELECT CARDDESCRIPTIONS.SHORTCARDMODELID FROM TARIFFOWN.CARDDESCRIPTIONS WHERE CARDDESCRIPTIONS.MANUFACTURERID = :MANUFACTURERID";
+    }
+}

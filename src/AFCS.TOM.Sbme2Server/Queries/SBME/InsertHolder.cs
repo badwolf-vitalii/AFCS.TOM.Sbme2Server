@@ -1,0 +1,59 @@
+﻿namespace AFCS.TOM.Sbme2Server.SBME
+{
+    static partial class Queries
+    {
+        private const string _insertHolder = @"INSERT INTO GESTOWN.HOLDERS (
+            HOLDERID,
+            INSERTDATE,
+            LASTUPDATE,
+            HOLDERFISCALCODE,
+            HOLDERFIRSTNAME,
+            HOLDERLASTNAME,
+            HOLDERBIRTHDAY,
+            HOLDERPHOTO,
+            HOLDERSIGNATURE,
+            HOLDERBIRTHPLACE,
+            HOLDERNATIONALITY,
+            HOLDERSEX,
+            HOLDERADDRESS,
+            HOLDERTOWN,
+            HOLDERZIPCODE,
+            HOLDERPROV,
+            HOLDERPHONE1,
+            HOLDERPHONE2,
+            HOLDERPHONE3,
+            HOLDERPHONE4,
+            HOLDEREMAIL,
+            STATUS,
+            OPERATORID,
+            FLAGCFAUTO
+            )
+            VALUES 
+            (
+            holderid_seq.NEXTVAL,
+            SYSDATE,
+            SYSDATE,
+            :Holderfiscalcode, 
+            :HolderFirstName, 
+            :HolderLastName,
+            :HolderBirthday,
+            :HolderPhoto,
+            :HolderSignature,
+            :HolderBirthPlace,
+            :HolderNationality,
+            :HolderSex,
+            :HolderAddress,
+            :HolderTown,
+            :HolderZipCode,
+            :HolderProv,
+            :HolderPhone1,
+            :HolderPhone2,
+            :HolderPhone3,
+            :HolderPhone4,
+            :HolderEMail,
+            'INSERT',
+            :OPERATORID,
+            0
+            ) RETURNING HOLDERID INTO :HOLDERID";
+    }
+}

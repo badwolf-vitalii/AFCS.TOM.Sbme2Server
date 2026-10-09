@@ -1,0 +1,66 @@
+﻿namespace AFCS.TOM.Sbme2Server.SBME2
+{
+    public partial class Queries
+    {
+        private const string _insertAgent = @"INSERT INTO #SCHEME_SBME2_CONFOWN#.AGENTS (
+            AGENTID, 
+            OPERATORID, 
+            AGENTUSERNAME, 
+            AGENTUSERPASSW, 
+            MATRICROLL, 
+            FIRSTNAME, 
+            FAMILYNAME, 
+            AGENTSTATUS, 
+            PLANTID, 
+            SYNID, 
+            PINCODE, 
+            SHORTCARDMODEL, 
+            TSCSERIALNO, 
+            TSCSALEOPERATORID, 
+            PROOFDOCID, 
+            PROOFDOCSERIALNO, 
+            PSWCHANGEDATE, 
+            PSWCHANGEAGENTID, 
+            PSWEXPIRYDATE, 
+            PSWHASHMODE, 
+            PINCHANGEDATE, 
+            PINCHANGEAGENTID, 
+            PINEXPIRYDATE, 
+            PINHASHMODE, 
+            LOGINATTEMPTLEFT, 
+            PSWCHANGEENABLED, 
+            HOLDERID, 
+            ROLEAGENTID) 
+            VALUES 
+            (
+            {0},
+            :OperatorId, 
+            :AgentUsername,
+            :AgentUserPassw, 
+            :MatricRoll, 
+            :FirstName,  
+            :FamilyName, 
+            :AgentStatus, 
+            :PlantId, 
+            :SynId, 
+            :PinCode, 
+            :ShortCardModel, 
+            :TSCSerialNo, 
+            :TSCSaleOperatorId, 
+            :ProofDocId, 
+            :ProofDocSerialNo, 
+            :PswChangeDate, 
+            :PswChangeAgentId, 
+            :PswExpiryDate, 
+            :PswHashMode, 
+            :PinChangeDate, 
+            :PinChangeAgentId, 
+            :PinExpiryDate, 
+            :PinHashMode, 
+            :LoginAttemptLeft, 
+            :PswChangeEnabled, 
+            :HolderId, 
+            :RoleAgentId
+            ) RETURNING AGENTID INTO :AGENTID_RETURN";
+    }
+}

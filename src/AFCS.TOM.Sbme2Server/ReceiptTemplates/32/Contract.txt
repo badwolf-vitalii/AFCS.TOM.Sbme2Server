@@ -1,0 +1,17 @@
+﻿Tariffa#00:01#           #01:22#
+#02:32#
+Seriale                  #03:24#
+Venduto                  #04:24#
+Tipo                     #05:27#
+Classe passeggero        #06:14#
+Origine                  #07:24#
+Dest.                    #08:26#
+Via                      #09:28#
+Via2                     #10:27#
+Stato                    #11:26#
+Inizio                   #12:25#
+Fine                     #13:27#
+Limite                   #14:25#
+Zone                     #15:27#
+Tot.Viaggi               #16:21#
+--------------------------------

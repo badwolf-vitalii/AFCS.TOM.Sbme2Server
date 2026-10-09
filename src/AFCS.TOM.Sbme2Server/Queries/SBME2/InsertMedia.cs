@@ -1,0 +1,59 @@
+﻿namespace AFCS.TOM.Sbme2Server.SBME2
+{
+    public partial class Queries
+    {
+
+        private const string _insertMedia = @"INSERT INTO #SCHEME_SBME2_GESTOWN#.TSCDOCUMENTS 
+            (
+            SHORTCARDMODEL,
+            TSCSERIALNO,
+            SALEOPERATORID,
+            DOCCLASSID,
+            DOCTYPEID,
+            TSCHOLDERASSOCIATIONTYPE,
+            HOLDERID,
+            MAINPROFILEID,
+            PROFILEID2,
+            PROFILEID3,
+            ISSUINGDATETIME,
+            PRICE,
+            PRICEVERSIONID,
+            TSCVALIDITYENDDATE,
+            PROFILEVALIDITYENDDATE,
+            PROFILE2VALIDITYENDDATE,
+            PROFILE3VALIDITYENDDATE,
+            ISSUINGOPERATORID,
+            ISSUINGDEVICECLASSID,
+            ISSUINGDEVICECODE,
+            ISSUINGSALEDEVICEID,
+            LASTUPDATE,
+            TSCSTATUS
+            ) 
+            VALUES 
+            (
+            :SHORTCARDMODEL,
+            :TSCSERIALNO,
+            :SALEOPERATORID,
+            :DOCCLASSID,
+            :DOCTYPEID,
+            :TSCHOLDERASSOCIATIONTYPE,
+            :HOLDERID,
+            :MAINPROFILEID,
+            :PROFILEID2,
+            :PROFILEID3,
+            :ISSUINGDATETIME,
+            :PRICE,
+            :PRICEVERSIONID,
+            :TSCVALIDITYENDDATE,
+            :PROFILEVALIDITYENDDATE,
+            :PROFILE2VALIDITYENDDATE,
+            :PROFILE3VALIDITYENDDATE,
+            :ISSUINGOPERATORID,
+            :ISSUINGDEVICECLASSID,
+            :ISSUINGDEVICECODE,
+            :ISSUINGSALEDEVICEID,
+            SYSDATE,
+            :TSCSTATUS
+            )";
+    }
+}

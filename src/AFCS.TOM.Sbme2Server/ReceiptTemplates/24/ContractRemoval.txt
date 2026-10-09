@@ -1,0 +1,28 @@
+﻿~SKP~#00:24#
+------------------------
+~SKP~CANCELLAZIONE CONTRATTO
+------------------------
+#01:04#          #02:19#
+AgentID          #03:16#
+Prog.Turno       #04:13#
+Chip ID          #05:16#
+========================
+TARIFFA          #06:16#
+#07:24#
+Contratto        #08:14#
+Classe passeggero#09:06#
+Origine          #10:16#
+Dest.            #11:18#
+Via              #12:20#
+Via2             #13:19#
+Inizio           #14:17#
+Fine             #15:19#
+Limite           #16:17#
+TOT.VIAGGI       #17:13#
+========================
+       CRONOLOGIA
+VALIDITA         #18:15#
+PREZZO (Euro)    #19:10#
+#DateTimeNow#24#
+------------------------
+

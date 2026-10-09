@@ -1,0 +1,75 @@
+﻿namespace AFCS.TOM.Sbme2Server.SBME2
+{
+    static partial class Queries
+    {
+        private const string _insertTSCDocumentInHistory = @"INSERT INTO TSCDOCUMENTSHISTORY 
+            (
+            MODIFICATIONDATE,
+            REASONCODE,  
+            SHORTCARDMODEL,   
+            TSCSERIALNO,      
+            SALEOPERATORID,   
+            DOCCLASSID,       
+            DOCTYPEID,        
+            TSCHOLDERASSOCIATIONTYPE, 
+            HOLDERID,     
+            MAINPROFILEID,    
+            PROFILEID2,       
+            PROFILEID3,       
+            ISSUINGDATETIME,  
+            PRICE,            
+            PRICEVERSIONID,   
+            TSCVALIDITYENDDATE, 
+            PROFILEVALIDITYENDDATE, 
+            PROFILE2VALIDITYENDDATE, 
+            PROFILE3VALIDITYENDDATE, 
+            ISSUINGOPERATORID,
+            ISSUINGDEVICECLASSID, 
+            ISSUINGDEVICECODE,
+            ISSUINGSALEDEVICEID, 
+            TSCAPPLICSERIALNO,
+            ACTOPENDATE,      
+            ACTFILENO,        
+            LASTUPDATE,       
+            AGENT_LASTUPDATE, 
+            TSCSTATUS,        
+            BLINSERTDATETIME, 
+            BLADDEDBY,        
+            BLREASONCODE,     
+            BLBURNOPERATORID, 
+            BLBURNDEVICECLASSID, 
+            BLBURNDEVICECODE, 
+            BLBURNDATETIME,   
+            BLSUSPENDED,      
+            PROOFDOCID,       
+            PROOFDOCSN,       
+            DOCUMENTCODE,     
+            BATCHID,          
+            COMPANYID,        
+            LOTID,            
+            ACCOUNTENTRYID,   
+            ACCOUNTOPERATORID,
+            SMARTCARDSN,      
+            REFUNDDATE,       
+            REFUNDSALEOPERATORID, 
+            REFUNDSALEDEVICEID, 
+            REFUNDSERIALNO,   
+            REFUNDAGENTID,    
+            SUBPRICES,        
+            EXTRAVALUES,      
+            ACTTRANSNUMBER,   
+            OLDSHORTCARDMODEL,
+            OLDTSCSERIALNO,   
+            OLDSALEOPERATORID
+            ) 
+            SELECT SYSDATE, :reasonCode, tsc.shortCardModel, tsc.TscSerialNo, tsc.SaleOperatorId, DOCCLASSID, DOCTYPEID, TSCHOLDERASSOCIATIONTYPE, HOLDERID,         
+                    MAINPROFILEID, PROFILEID2, PROFILEID3, ISSUINGDATETIME, PRICE, PRICEVERSIONID, TSCVALIDITYENDDATE, PROFILEVALIDITYENDDATE, 
+                    PROFILE2VALIDITYENDDATE, PROFILE3VALIDITYENDDATE, ISSUINGOPERATORID,ISSUINGDEVICECLASSID, ISSUINGDEVICECODE, ISSUINGSALEDEVICEID, TSCAPPLICSERIALNO, ACTOPENDATE, ACTFILENO, 
+                    LASTUPDATE, AGENT_LASTUPDATE, TSCSTATUS, bl.INSERTDATE, bl.BLADDEDBY, bl.REASONCODE, bl.BLBURNOPERATORID, bl.BLBURNDEVICECLASSID, bl.BLBURNDEVICECODE, 
+                    bl.BLBURNDATETIME,bl.BLSUSPENDED, PROOFDOCID, PROOFDOCSN, DOCUMENTCODE, BATCHID, COMPANYID, LOTID, ACCOUNTENTRYID, ACCOUNTOPERATORID, SMARTCARDSN,    
+                    REFUNDDATE, REFUNDSALEOPERATORID, REFUNDSALEDEVICEID, REFUNDSERIALNO, REFUNDAGENTID, SUBPRICES, EXTRAVALUES, ACTTRANSNUMBER, OLDSHORTCARDMODEL, OLDTSCSERIALNO, OLDSALEOPERATORID                
+            FROM TSCDocuments tsc           
+            LEFT JOIN TSCBlacklist bl ON (tsc.shortcardmodel=bl.shortcardmodel AND to_number(tsc.tscserialno, 'XXXXXXXXXXXXXXXXXXXX') BETWEEN to_number(bl.firsttscserialno, 'XXXXXXXXXXXXXXXXXXXX') AND to_number(bl.lasttscserialno, 'XXXXXXXXXXXXXXXXXXXX') ) 
+            WHERE tsc.SHORTCARDMODEL = :shortCardModel AND to_number(tsc.tscserialno, 'XXXXXXXXXXXXXXXXXXXX') = to_number(:tscSerialNo, 'XXXXXXXXXXXXXXXXXXXX')";
+    }
+}

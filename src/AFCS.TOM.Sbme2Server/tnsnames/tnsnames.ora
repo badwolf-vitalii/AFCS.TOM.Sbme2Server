@@ -1,0 +1,102 @@
+afcspdb =
+
+(DESCRIPTION =
+       (ADDRESS_LIST= (LOAD_BALANCE=on)(FAILOVER=ON)
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.66)(PORT=1521))
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.78)(PORT=1521))
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.77)(PORT=1521)))
+     (CONNECT_DATA =
+       (SERVER = DEDICATED)
+       (SERVICE_NAME = SBME2TPD.exa1client.trenordvcn4.oraclevcn.com)
+       (FAILOVER_MODE =
+         (TYPE = select)
+         (METHOD = basic)
+       )
+     )
+   )
+
+
+
+
+SBME2T =
+   (DESCRIPTION =
+       (ADDRESS_LIST= (LOAD_BALANCE=on)(FAILOVER=ON) 
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.66)(PORT=1521))
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.78)(PORT=1521))
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.77)(PORT=1521)))
+     (CONNECT_DATA =
+       (SERVER = DEDICATED)
+       (SERVICE_NAME = SBME2T_fra24m.exa1client.trenordvcn4.oraclevcn.com)
+       (FAILOVER_MODE =
+         (TYPE = select)
+         (METHOD = basic)
+       )
+     )
+   )
+ 
+ 
+SBME2TPD =
+   (DESCRIPTION =
+       (ADDRESS_LIST= (LOAD_BALANCE=on)(FAILOVER=ON) 
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.66)(PORT=1521))
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.78)(PORT=1521))
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.77)(PORT=1521)))
+     (CONNECT_DATA =
+       (SERVER = DEDICATED)
+       (SERVICE_NAME = SBME2TPD.exa1client.trenordvcn4.oraclevcn.com)
+       (FAILOVER_MODE =
+         (TYPE = select)
+         (METHOD = basic)
+       )
+     )
+   )
+ 
+ 
+SBME2TPD_SRV =
+   (DESCRIPTION =
+       (ADDRESS_LIST= (LOAD_BALANCE=on)(FAILOVER=ON) 
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.66)(PORT=1521))
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.78)(PORT=1521))
+         (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.77)(PORT=1521)))
+     (CONNECT_DATA =
+       (SERVER = DEDICATED)
+       (SERVICE_NAME = SBME2TPD_srv.exa1client.trenordvcn4.oraclevcn.com)
+       (FAILOVER_MODE =
+         (TYPE = select)
+         (METHOD = basic)
+       )
+     )
+   )
+
+
+SGDB_FN  =
+(DESCRIPTION =
+        (ADDRESS_LIST = (LOAD_BALANCE=on)(FAILOVER=ON)
+                (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.66)(PORT=1521))
+                (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.78)(PORT=1521))
+                (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.77)(PORT=1521))
+        )
+        (CONNECT_DATA =
+                (SERVER = DEDICATED)
+                (SERVICE_NAME = pdbsgfntest.exa1client.trenordvcn4.oraclevcn.com)
+                (FAILOVER_MODE = (TYPE=select)(METHOD = basic))
+        )
+  )
+
+
+SBMEDB=
+  (DESCRIPTION =
+      (ADDRESS_LIST= (LOAD_BALANCE=on)(FAILOVER=ON)
+        (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.66)(PORT=1521))
+        (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.78)(PORT=1521))
+        (ADDRESS=(PROTOCOL=tcp)(HOST=10.107.144.77)(PORT=1521)))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = T_SSBME.exa1client.trenordvcn4.oraclevcn.com)
+      (FAILOVER_MODE =
+        (TYPE = select)
+        (METHOD = basic)
+      )
+    )
+  )
+

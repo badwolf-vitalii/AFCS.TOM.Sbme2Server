@@ -1,0 +1,36 @@
+﻿~SKP~#00:24#
+------------------------
+~SKP~ RICARICA CONTRATTO TSC
+~SKP~    RICARICATO DA WL
+------------------------
+#01:04#          #02:19#
+AgentID          #03:16#
+Prog.Turno       #04:13#
+Chip ID          #05:16#
+Cliente No.      #06:12#
+Nascita          #07:16#
+========================
+TARIFFA          #08:16#
+#09:24#
+Contratto        #10:14#
+Classe passeggero#11:06#
+Origine          #12:16#
+Dest.            #13:18#
+Via              #14:20#
+Via2             #15:19#
+Inizio           #16:17#
+Fine             #17:19#
+Limite           #18:17#
+Zone             #19:19#
+TOT.VIAGGI       #20:13#
+========================
+           PREZZO (Euro)
+TOTALE           #21:13#
+SCONTO           #22:17#
+========================
+   TIPI DI PAGAMENTO
+#23:24#
+========================
+#DateTimeNow#24#
+------------------------
+

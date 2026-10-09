@@ -1,0 +1,14 @@
+﻿Tariffa:                 #00:23#
+#01:00#
+Seriale:                 #02:23#
+Prima val.:              #03:20#
+Validazione:             #04:19#
+Localita:                #05:22#
+#06:00#
+Tipo evento:             #07:19#
+Risultato:               #08:21#
+Scadenza:                #09:22#
+Descrizione del viaggio:
+#10:00#
+Numero passeggeri:       #11:13#
+--------------------------------

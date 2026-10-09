@@ -1,0 +1,37 @@
+---- 2024y 03m 08d 19:07:15
+--
+--SET ANSI_NULLS ON
+--
+--SET QUOTED_IDENTIFIER ON
+--
+---- CREATE SaleDeviceIdentifier --------------------------------------------------
+--CREATE TABLE [dbo].[SaleDeviceIdentifier](
+--	[ID] [uniqueidentifier] NOT NULL,
+--	[DeviceIdentifier] [nvarchar](50) NOT NULL,
+-- CONSTRAINT [PK_SaleDeviceIdentifier] PRIMARY KEY CLUSTERED 
+--(
+--	[ID] ASC
+--)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+--) ON [PRIMARY]
+--
+--ALTER TABLE [dbo].[SaleDeviceIdentifier] ADD  CONSTRAINT [DF_SaleDeviceIdentifier_DeviceIdentifier]  DEFAULT (N'localhost') FOR [DeviceIdentifier]
+----------------------------------------------------------------------------------
+--
+---- UPDATE AccountingPeriod -----------------------------------------------------
+--ALTER TABLE [dbo].[AccountingPeriod]
+--ADD [DeviceIdentifier_ID] [uniqueidentifier] NULL;
+--
+--ALTER TABLE [dbo].[AccountingPeriod]  WITH CHECK ADD  CONSTRAINT [FK_AccountingPeriod_SaleDeviceIdentifier] FOREIGN KEY([DeviceIdentifier_ID])
+--REFERENCES [dbo].[SaleDeviceIdentifier] ([ID])
+--
+--ALTER TABLE [dbo].[AccountingPeriod] CHECK CONSTRAINT [FK_AccountingPeriod_SaleDeviceIdentifier]
+----------------------------------------------------------------------------------
+--
+--INSERT INTO [dbo].[DatabaseInfo]
+--           ([Version]
+--           ,[LastModified]
+--           ,[ChangeLog])
+--     VALUES
+--           (42
+--           ,CONVERT(datetime, '20240308 19:07:15')
+--           ,'Created table SaleDeviceIdentifier. Added column SaleDeviceIdentifier to AccountingPeriod')
