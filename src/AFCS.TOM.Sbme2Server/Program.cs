@@ -96,6 +96,7 @@ if (Directory.Exists(tnsnamesPath))
         builder.Services.AddScoped<Bgl.IBglDbDebugService, Bgl.BglDbDebugService>();
 #endif
         builder.Services.AddSingleton<IHostedService, Bgl.BacpacBackgroundService>();
+        builder.Services.AddHostedService<Bgl.StaticTablesRecoveryService>();
 
         builder.Services.AddScoped<Bgl.ISalesService, Bgl.SalesService>();
         builder.Services.AddScoped<Bgl.IReceiptsService, Bgl.ReceiptsService>();
