@@ -340,6 +340,19 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
 
         public async Task<Guid> CommitPtTransaction(PtConfirmTransaction transaction)
         {
+            ArgumentNullException.ThrowIfNull(transaction);
+
+            // A client may retry after a network timeout even when the first commit succeeded.
+            // Use the same business key as CheckIfPtTransactionExists to avoid duplicate rows.
+            var existingId = await _context.PtConfirmTransactions
+                .Where(p => p.TransactionNumber == transaction.TransactionNumber &&
+                    p.CodiceEsattoria == transaction.CodiceEsattoria &&
+                    p.CodiceRivendita == transaction.CodiceRivendita)
+                .Select(p => (Guid?)p.Id)
+                .FirstOrDefaultAsync();
+            if (existingId.HasValue)
+                return existingId.Value;
+
             var products = transaction.PtConfirmTransactionProducts;
             var payments = transaction.PtConfirmTransactionPayments;
             if (transaction.Id.Equals(Guid.Empty))
