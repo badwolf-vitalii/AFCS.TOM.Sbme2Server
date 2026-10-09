@@ -131,7 +131,7 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
                     }
                     else
                     {
-                        transaction.Articles.Remove(article);
+                        transaction.Articles?.Remove(article);
                     }
                 }
             }
@@ -289,7 +289,7 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
                     }
                     else
                     {
-                        transaction.Articles.Remove(article);
+                        transaction.Articles?.Remove(article);
                         if (!anyArticleAdded && existingTransactionId.Equals(Guid.Empty))
                         {
                             existingTransactionId = _context.Articles.FirstOrDefault(p => p.Id.Equals(article.Id))?.SaleTransactionId ?? existingTransactionId;
