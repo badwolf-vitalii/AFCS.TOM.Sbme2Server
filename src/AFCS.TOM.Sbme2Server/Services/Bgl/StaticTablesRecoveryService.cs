@@ -4,7 +4,9 @@ using System.Text.Json;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using AFCS.TOM.Sbme2Server.Configurations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using DL = AFCS.TOM.SbmeDataLayer;
 
 namespace AFCS.TOM.Sbme2Server.Services.Bgl;
 
@@ -12,11 +14,13 @@ public sealed class StaticTablesRecoveryService : BackgroundService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<StaticTablesRecoveryService> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public StaticTablesRecoveryService(IConfiguration configuration, ILogger<StaticTablesRecoveryService> logger)
+    public StaticTablesRecoveryService(IConfiguration configuration, IServiceScopeFactory scopeFactory, ILogger<StaticTablesRecoveryService> logger)
     {
         _configuration = configuration;
         _logger = logger;
+        _scopeFactory = scopeFactory;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -47,23 +51,20 @@ public sealed class StaticTablesRecoveryService : BackgroundService
     {
         try
         {
-            var db = _configuration.GetSection("BglDataLayerConfiguration").Get<BglDataLayerConfiguration>();
-            if (db == null)
-                throw new InvalidOperationException("BglDataLayerConfiguration is missing.");
-
             var folder = Path.Combine(AppContext.BaseDirectory, "StaticTables");
             if (!Directory.Exists(folder))
                 throw new DirectoryNotFoundException($"Static tables directory not found: {folder}");
 
-            await using var connection = new SqlConnection(db.ConnectionString);
-            await connection.OpenAsync(token);
+            using var scope = _scopeFactory.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<DL.DataLayerContext>();
+            await context.Database.OpenConnectionAsync(token);
 
             foreach (var file in Directory.EnumerateFiles(folder, "*.json").OrderBy(x => x))
             {
                 token.ThrowIfCancellationRequested();
                 try
                 {
-                    await RestoreTable(connection, file, token);
+                    await RestoreTable(context, file, token);
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
                 {
@@ -77,7 +78,7 @@ public sealed class StaticTablesRecoveryService : BackgroundService
         }
     }
 
-    private async Task RestoreTable(SqlConnection connection, string file, CancellationToken token)
+    private async Task RestoreTable(DL.DataLayerContext context, string file, CancellationToken token)
     {
         var table = Path.GetFileNameWithoutExtension(file);
         using var document = JsonDocument.Parse(await File.ReadAllTextAsync(file, token));
@@ -107,6 +108,7 @@ LEFT JOIN (
 WHERE s.name = 'dbo' AND t.name = @table
 ORDER BY c.column_id;";
 
+        var connection = (SqlConnection)context.Database.GetDbConnection();
         var columns = new List<(string Name, bool Identity, bool Insertable, bool PrimaryKey)>();
         await using (var command = new SqlCommand(metadataSql, connection))
         {
@@ -150,7 +152,8 @@ ORDER BY c.column_id;";
 
         var quotedTable = "[dbo].[" + table.Replace("]", "]]") + "]";
         var restored = 0;
-        await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(IsolationLevel.Serializable, token);
+        await using var efTransaction = await context.Database.BeginTransactionAsync(IsolationLevel.Serializable, token);
+        var transaction = (SqlTransaction)efTransaction.GetDbTransaction();
         try
         {
             foreach (var row in rows)
@@ -160,6 +163,8 @@ ORDER BY c.column_id;";
                 var conditions = string.Join(" AND ", keys.Select((k, i) =>
                     "[" + k.Replace("]", "]]") + "] = @key" + i));
                 var insertColumns = string.Join(", ", insert.Select(p => "[" + p.Name.Replace("]", "]]") + "]"));
+                if (insert.Length == 0)
+                    throw new InvalidDataException($"No insertable columns in {file}.");
                 var values = string.Join(", ", insert.Select((_, i) => "@value" + i));
                 var sql = $"IF NOT EXISTS (SELECT 1 FROM {quotedTable} WITH (UPDLOCK, HOLDLOCK) WHERE {conditions}) " +
                     $"BEGIN INSERT INTO {quotedTable} ({insertColumns}) VALUES ({values}); SELECT 1; END ELSE SELECT 0;";
@@ -183,13 +188,13 @@ ORDER BY c.column_id;";
                 }
             }
 
-            await transaction.CommitAsync(token);
+            await efTransaction.CommitAsync(token);
             if (restored > 0)
                 _logger.LogWarning("Restored {Count} missing records in dbo.{Table}", restored, table);
         }
         catch
         {
-            await transaction.RollbackAsync(CancellationToken.None);
+            await efTransaction.RollbackAsync(CancellationToken.None);
             throw;
         }
     }
