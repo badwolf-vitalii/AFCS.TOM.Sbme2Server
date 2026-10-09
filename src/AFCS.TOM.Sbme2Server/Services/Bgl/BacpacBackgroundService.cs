@@ -677,26 +677,9 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
                         #region Close Transactions
                         if (cpyDone && delDone)
                         {
-                            try
-                            {
-                                await delTransaction.CommitAsync();
-                                delTranClosed = true;
-                            }
-                            catch
-                            {
-                                try
-                                {
-                                    await delTransaction.RollbackAsync();
-                                    delTranClosed = true;
-                                }
-                                catch
-                                {
-                                    // transaction may already be committed or disposed
-                                }
-
-                                throw;
-                            }
-
+                            // Commit the archive first. Both transactions are independent;
+                            // committing source deletion first could permanently lose data
+                            // if the archive transaction fails to commit.
                             try
                             {
                                 await cpyTransaction.CommitAsync();
@@ -711,7 +694,29 @@ namespace AFCS.TOM.Sbme2Server.Services.Bgl
                                 }
                                 catch
                                 {
-                                    // transaction may already be committed or disposed
+                                    // Commit outcome may be unknown after a connection failure.
+                                }
+
+                                throw;
+                            }
+
+                            try
+                            {
+                                await delTransaction.CommitAsync();
+                                delTranClosed = true;
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger?.Error(ex, "Archive committed, but source deletion commit failed. " +
+                                    "Source records may still be present; the next cleanup must handle existing archive records.");
+                                try
+                                {
+                                    await delTransaction.RollbackAsync();
+                                    delTranClosed = true;
+                                }
+                                catch
+                                {
+                                    // Commit outcome may be unknown after a connection failure.
                                 }
 
                                 throw;
