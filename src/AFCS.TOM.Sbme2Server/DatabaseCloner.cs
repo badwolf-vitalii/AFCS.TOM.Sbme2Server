@@ -76,37 +76,49 @@ public static class DatabaseCloner
         var loc = assembly.Location;
         var path = Path.GetDirectoryName(loc);
         var staticTablesLstPath = Path.Combine(path!, "static_tables.lst");
-        var loaded = false;
+        var tables = File.Exists(staticTablesLstPath)
+            ? File.ReadAllLines(staticTablesLstPath)
+                .Select(line => line.Trim())
+                .Where(line => !string.IsNullOrWhiteSpace(line) && !line.StartsWith("#"))
+                .ToArray()
+            : Array.Empty<string>();
 
-        if (File.Exists(staticTablesLstPath))
+        if (tables.Length == 0)
         {
-            var tables = File.ReadAllLines(staticTablesLstPath);
-            if (tables.Length > 0)
+            tables = new[]
             {
-                foreach (var table in tables)
-                {
-                    TryCopyTableData(sourceConnectionString, targetConnectionString, table);
-                }
+                "AgentShiftState",
+                "ApplicationShutdownReason",
+                "ArticleType",
+                "CardAnomalyType",
+                "CommandAttachmentType",
+                "ContactlessCardReissuingReason",
+                "CscType",
+                "DatabaseInfo",
+                "PaymentMethod",
+                "PtItemType",
+                "SbmeProfilePriceMapping",
+                "SellingDataSendStatus"
+            };
+        }
 
-                loaded = true;
+        var failures = new List<Exception>();
+        foreach (var table in tables)
+        {
+            try
+            {
+                CopyTableData(sourceConnectionString, targetConnectionString, table);
+                LogHelper.Info(Logger, $"Copied static table dbo.{table}");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error(Logger, ex);
+                failures.Add(new InvalidOperationException($"Failed to copy static table dbo.{table}.", ex));
             }
         }
 
-        if (!loaded)
-        {
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "AgentShiftState");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "ApplicationShutdownReason");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "ArticleType");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "CardAnomalyType");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "CommandAttachmentType");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "ContactlessCardReissuingReason");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "CscType");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "DatabaseInfo");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "PaymentMethod");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "PtItemType");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "SbmeProfilePriceMapping");
-            TryCopyTableData(sourceConnectionString, targetConnectionString, "SellingDataSendStatus");
-        }
+        if (failures.Count > 0)
+            throw new AggregateException($"Failed to copy {failures.Count} of {tables.Length} static tables.", failures);
     }
 
     public static void TryCopyTableData(
@@ -121,6 +133,8 @@ public static class DatabaseCloner
         }
         catch (Exception ex)
         {
+            LogHelper.Error(Logger, ex);
+            throw;
         }
     }
 
@@ -136,20 +150,22 @@ public static class DatabaseCloner
         sourceConnection.Open();
         targetConnection.Open();
 
-        var tableName = $"[{schema}].[{table}]";
+        var tableName = $"[{schema.Replace("]", "]]")}].[{table.Replace("]", "]]")}]";
 
         using var readCommand = new SqlCommand($"SELECT * FROM {tableName}", sourceConnection);
         using var reader = readCommand.ExecuteReader();
 
+        using var transaction = targetConnection.BeginTransaction();
         using var bulkCopy = new SqlBulkCopy(
             targetConnection,
             SqlBulkCopyOptions.KeepIdentity,
-            null) {
+            transaction) {
             DestinationTableName = tableName,
             BulkCopyTimeout = 0,
             BatchSize = 5000
         };
 
         bulkCopy.WriteToServer(reader);
+        transaction.Commit();
     }
 }
