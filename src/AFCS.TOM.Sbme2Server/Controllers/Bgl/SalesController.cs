@@ -1061,7 +1061,7 @@ namespace AFCS.TOM.Sbme2Server.Controllers.Bgl
             try
             {
                 CheckServiceAvailability(true);
-                result = _salesService.GetMissingPtTransactions();
+                result = await _salesService.GetMissingPtTransactionsAsync(HttpContext.RequestAborted);
             }
             catch (ExceptionContainer ex)
             {
