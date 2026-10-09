@@ -14,6 +14,7 @@ public sealed class StaticTablesRecoveryService : BackgroundService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<StaticTablesRecoveryService> _logger;
+    
     private readonly IServiceScopeFactory _scopeFactory;
 
     public StaticTablesRecoveryService(IConfiguration configuration, IServiceScopeFactory scopeFactory, ILogger<StaticTablesRecoveryService> logger)
@@ -55,6 +56,7 @@ public sealed class StaticTablesRecoveryService : BackgroundService
             if (!Directory.Exists(folder))
                 throw new DirectoryNotFoundException($"Static tables directory not found: {folder}");
 
+            // Hosted services are singletons; resolve a scoped DbContext for each recovery pass.
             using var scope = _scopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<DL.DataLayerContext>();
             await context.Database.OpenConnectionAsync(token);
@@ -108,7 +110,9 @@ LEFT JOIN (
 WHERE s.name = 'dbo' AND t.name = @table
 ORDER BY c.column_id;";
 
+        // Use the connection managed by EF Core instead of creating a new SqlConnection.
         var connection = (SqlConnection)context.Database.GetDbConnection();
+
         var columns = new List<(string Name, bool Identity, bool Insertable, bool PrimaryKey)>();
         await using (var command = new SqlCommand(metadataSql, connection))
         {
