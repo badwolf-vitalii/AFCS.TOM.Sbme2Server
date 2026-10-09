@@ -2058,165 +2058,75 @@ namespace AFCS.TOM.Sbme2Server
             return;
         }
 
+
         public static async Task ForgetTscDocument(string connectionString, string tscSerial)
         {
+            if (string.IsNullOrWhiteSpace(tscSerial))
+                throw new ArgumentException("TSC serial number cannot be empty.", nameof(tscSerial));
+
+            if (tscSerial.Contains(':'))
+            {
+                var parts = tscSerial.Split(':');
+                if (parts.Length != 2 || parts[0].Length == 0 || parts[1].Length == 0)
+                    throw new FormatException("Invalid TSC serial number format.");
+
+                switch (parts[1])
+                {
+                    case "16":
+                        tscSerial = parts[0];
+                        break;
+                    case "10":
+                        tscSerial = long.Parse(parts[0], CultureInfo.InvariantCulture)
+                            .ToString("X", CultureInfo.InvariantCulture);
+                        break;
+                    default:
+                        throw new FormatException($"Base {parts[1]} numbering system not supported.");
+                }
+            }
+            else
+            {
+                tscSerial = long.Parse(tscSerial, CultureInfo.InvariantCulture)
+                    .ToString("X", CultureInfo.InvariantCulture);
+            }
+
+            // Retain the optional-connection behavior of this legacy operation.
+            if (string.IsNullOrWhiteSpace(connectionString))
+                return;
+
             OracleConnection? connection = null;
             OracleTransaction? transaction = null;
             try
             {
-                if (tscSerial.Contains(":"))
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
+                if (connection == null)
+                    throw new DBConnectionOpeningException(connectionString);
+
+                transaction = connection.BeginTransaction();
+
+                // Child rows must be deleted before their parent rows.
+                // Subqueries avoid Oracle's 1000-item IN-list limit and extra SELECT round trips.
+                var queries = new[]
                 {
-                    var split = tscSerial.Split(':', StringSplitOptions.RemoveEmptyEntries);
-                    switch (split[1])
-                    {
-                        case "16": tscSerial = split[0]; break;
-                        case "10":
-                            {
-                                var tscSerialDecimal = long.Parse(split[0]);
-                                tscSerial = $"{tscSerialDecimal:X}";
-                            }
-                            break;
-                        default: throw new Exception($"Base {split[1]} numbering system not supported");
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        var tscSerialDecimal = long.Parse(tscSerial);
-                        tscSerial = $"{tscSerialDecimal:X}";
-                    }
-                    catch (Exception ex)
-                    {
-                        LogHelper.Error(Logger, ex);
-                        throw;
-                    }
-                }
+                    "DELETE FROM REFUNDDETAILS WHERE SERIALNO IN (SELECT SERIALNO FROM REFUNDS WHERE TSCSERIALNO = :TscSerial)",
+                    "DELETE FROM REFUNDS WHERE TSCSERIALNO = :TscSerial",
+                    "DELETE FROM RECHARGESDONEDETAILS WHERE RECHARGESERIALNO IN (SELECT RECHARGELASTSERIALNO FROM RECHARGES WHERE TSCSERIALNO = :TscSerial)",
+                    "DELETE FROM RECHARGESDONE WHERE RECHARGESERIALNO IN (SELECT RECHARGELASTSERIALNO FROM RECHARGES WHERE TSCSERIALNO = :TscSerial)",
+                    "DELETE FROM RECHARGES WHERE TSCSERIALNO = :TscSerial",
+                    "DELETE FROM TSCBLACKLIST WHERE FIRSTTSCSERIALNO = :TscSerial OR LASTTSCSERIALNO = :TscSerial",
+                    "DELETE FROM CONTRACTSCONSOLIDATION WHERE TSCSERIALNO = :TscSerial",
+                    "DELETE FROM LONGTERMCONTRACTSHISTORY WHERE TSCSERIALNO = :TscSerial",
+                    "DELETE FROM LONGTERMCONTRACTDETAILS WHERE TSCSERIALNO = :TscSerial",
+                    "DELETE FROM LONGTERMCONTRACTS WHERE TSCSERIALNO = :TscSerial",
+                    "DELETE FROM TSCDOCUMENTDETAILSHISTORY WHERE TSCSERIALNO = :TscSerial",
+                    "DELETE FROM TSCDOCUMENTDETAILS WHERE TSCSERIALNO = :TscSerial",
+                    "DELETE FROM TSCDOCUMENTSHISTORY WHERE TSCSERIALNO = :TscSerial",
+                    "DELETE FROM TSCDOCUMENTS WHERE TSCSERIALNO = :TscSerial"
+                };
 
-                if (!string.IsNullOrWhiteSpace(connectionString))
-                {
-                    var query = string.Empty;
-                    connection = await DBOracleHelper.OpenDBConnection(connectionString);
-                    if (connection == null)
-                        throw new DBConnectionOpeningException(connectionString);
-                    transaction = connection.BeginTransaction();
+                foreach (var query in queries)
+                    await ExecuteTscDeleteAsync(query, transaction, tscSerial);
 
-                    // REFUNDS
-                    var refunds = new List<long>();
-                    query = $"SELECT SERIALNO FROM REFUNDS WHERE TSCSERIALNO='{tscSerial}'";
-                    using (var cmd = new OracleCommand(query, transaction.Connection))
-                    {
-                        try
-                        {
-                            cmd.CommandType = CommandType.Text;
-                            using (var reader = await cmd.ExecuteReaderAsync())
-                            {
-                                while (await reader.ReadAsync())
-                                {
-                                    refunds.Add(reader.GetInt64(0));
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            LogHelper.Error(Logger, ex);
-                            LogHelper.Error(Logger, query);
-                            throw;
-                        }
-                    }
-
-                    if (refunds.Count > 0)
-                    {
-                        var strRefunds = string.Join(", ", refunds);
-
-                        // REFUNDDETAILS
-                        query = $"DELETE FROM REFUNDDETAILS WHERE SERIALNO IN ({strRefunds})";
-                        await ExecuteNonQuery(query, connection);
-
-                        // REFUNDS
-                        query = $"DELETE FROM REFUNDS WHERE TSCSERIALNO='{tscSerial}'";
-                        await ExecuteNonQuery(query, connection);
-                    }
-
-                    // RECHARGES
-                    var recharges = new List<long>();
-                    query = $"SELECT RECHARGELASTSERIALNO FROM RECHARGES WHERE TSCSERIALNO='{tscSerial}'";
-                    using (var cmd = new OracleCommand(query, transaction.Connection))
-                    {
-                        try
-                        {
-                            cmd.CommandType = CommandType.Text;
-                            using (var reader = await cmd.ExecuteReaderAsync())
-                            {
-                                while (await reader.ReadAsync())
-                                {
-                                    recharges.Add(reader.GetInt64(0));
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            LogHelper.Error(Logger, ex);
-                            LogHelper.Error(Logger, query);
-                            throw;
-                        }
-                    }
-
-                    if (recharges.Count > 0)
-                    {
-                        var strRecharges = string.Join(", ", recharges);
-
-                        // RECHARGESDONEDETAILS
-                        query = $"DELETE FROM RECHARGESDONEDETAILS WHERE RECHARGESERIALNO IN ({strRecharges})";
-                        await ExecuteNonQuery(query, connection);
-
-                        // RECHARGESDONE
-                        query = $"DELETE FROM RECHARGESDONE WHERE RECHARGESERIALNO IN ({strRecharges})";
-                        await ExecuteNonQuery(query, connection);
-
-                        // RECHARGES
-                        query = $"DELETE FROM RECHARGES WHERE TSCSERIALNO='{tscSerial}'";
-                        await ExecuteNonQuery(query, connection);
-                    }
-
-                    // TSCBLACKLIST
-                    query = $"DELETE FROM TSCBLACKLIST WHERE FIRSTTSCSERIALNO='{tscSerial}' OR LASTTSCSERIALNO='{tscSerial}'";
-                    await ExecuteNonQuery(query, connection);
-
-                    // CONTRACTSCONSOLIDATION
-                    query = $"DELETE FROM CONTRACTSCONSOLIDATION WHERE TSCSERIALNO='{tscSerial}'";
-                    await ExecuteNonQuery(query, connection);
-
-                    // LONGTERMCONTRACTSHISTORY
-                    query = $"DELETE FROM LONGTERMCONTRACTSHISTORY WHERE TSCSERIALNO='{tscSerial}'";
-                    await ExecuteNonQuery(query, connection);
-
-                    // LONGTERMCONTRACTDETAILS
-                    query = $"DELETE FROM LONGTERMCONTRACTDETAILS WHERE TSCSERIALNO='{tscSerial}'";
-                    await ExecuteNonQuery(query, connection);
-
-                    // LONGTERMCONTRACTS
-                    query = $"DELETE FROM LONGTERMCONTRACTS WHERE TSCSERIALNO='{tscSerial}'";
-                    await ExecuteNonQuery(query, connection);
-
-                    // TSCDOCUMENTDETAILSHISTORY
-                    query = $"DELETE FROM TSCDOCUMENTDETAILSHISTORY WHERE TSCSERIALNO='{tscSerial}'";
-                    await ExecuteNonQuery(query, connection);
-
-                    // TSCDOCUMENTDETAILS
-                    query = $"DELETE FROM TSCDOCUMENTDETAILS WHERE TSCSERIALNO='{tscSerial}'";
-                    await ExecuteNonQuery(query, connection);
-
-                    // TSCDOCUMENTSHISTORY
-                    query = $"DELETE FROM TSCDOCUMENTSHISTORY WHERE TSCSERIALNO='{tscSerial}'";
-                    await ExecuteNonQuery(query, connection);
-
-                    // TSCDOCUMENTS
-                    query = $"DELETE FROM TSCDOCUMENTS WHERE TSCSERIALNO='{tscSerial}'";
-                    await ExecuteNonQuery(query, connection);
-
-                    transaction.Commit();
-                }
+                await transaction.CommitAsync();
             }
             catch
             {
@@ -2230,28 +2140,33 @@ namespace AFCS.TOM.Sbme2Server
             finally
             {
                 transaction?.Dispose();
-                if (connection != null && connection.State != ConnectionState.Closed)
+                if (connection != null)
                 {
-                    await DBOracleHelper.CloseDBConnection(connection);
+                    if (connection.State != ConnectionState.Closed)
+                        await DBOracleHelper.CloseDBConnection(connection);
+                    await connection.DisposeAsync();
                 }
             }
         }
 
-        private static async Task ExecuteNonQuery(string commandText, OracleConnection connection, bool throwable = true)
+        private static async Task ExecuteTscDeleteAsync(string query, OracleTransaction transaction, string tscSerial)
         {
-            using (var cmd = new OracleCommand(commandText, connection))
+            using var cmd = new OracleCommand(query, transaction.Connection)
             {
-                try
-                {
-                    cmd.CommandType = CommandType.Text;
-                    await cmd.ExecuteNonQueryAsync();
-                }
-                catch (Exception ex)
-                {
-                    LogHelper.Error(Logger, ex);
-                    LogHelper.Error(Logger, commandText);
-                    if (throwable) throw;
-                }
+                CommandType = CommandType.Text,
+                BindByName = true
+            };
+            cmd.Parameters.Add("TscSerial", OracleDbType.Varchar2).Value = tscSerial;
+
+            try
+            {
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error(Logger, ex);
+                LogHelper.Error(Logger, query);
+                throw;
             }
         }
 
