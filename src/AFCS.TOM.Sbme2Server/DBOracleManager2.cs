@@ -3202,9 +3202,10 @@ namespace AFCS.TOM.Sbme2Server
                             return true;
                            
                         }
-                        catch(Exception ex)
+                        catch
                         {
-                            transaction.Rollback();
+                            try { transaction.Rollback(); }
+                            catch (Exception rollbackException) { LogHelper.Error(Logger, rollbackException); }
                             throw;
                         }
                     }
