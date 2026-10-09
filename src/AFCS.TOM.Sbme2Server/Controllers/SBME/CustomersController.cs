@@ -716,60 +716,62 @@ namespace AFCS.TOM.Sbme2Server.Controllers.SBME
         [HttpPost("ForgetTsc")]
         public async Task<IActionResult> ForgetTsc([FromQuery] string? tscSerial, [FromQuery] bool? isHex = false)
         {
-            var ok = false;
-            if (!string.IsNullOrWhiteSpace(tscSerial))
-                try
-                {
-                    var serial = isHex ?? false
-                        ? long.Parse(tscSerial, System.Globalization.NumberStyles.HexNumber)
-                        : long.Parse(tscSerial);
-                    await DBOracleManager.ForgetTscDocument(ControllersHelper.GetConnectionString(_configuration, ConnectionString.SBME_GESTOWN), ControllersHelper.GetConnectionString(_configuration, ConnectionString.SG_GESTOWN), _configuration.GetConnectionString("SGGESTOWN_UNSAFE"), serial);
-                    ok = true;
-                }
-                catch (Exception ex)
-                {
-                    LogHelper.Error(_logger, new UpdateCustomerException(ex));
-                    return BadRequest(ex.Message);
-                }
-            return Ok(ok);
+            if (string.IsNullOrWhiteSpace(tscSerial))
+                return BadRequest("TSC serial number is required.");
+
+            try
+            {
+                var serial = isHex ?? false
+                    ? long.Parse(tscSerial, System.Globalization.NumberStyles.HexNumber)
+                    : long.Parse(tscSerial);
+                await DBOracleManager.ForgetTscDocument(
+                    ControllersHelper.GetConnectionString(_configuration, ConnectionString.SBME_GESTOWN),
+                    ControllersHelper.GetConnectionString(_configuration, ConnectionString.SG_GESTOWN),
+                    _configuration.GetConnectionString("SGGESTOWN_UNSAFE"),
+                    serial);
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error(_logger, ex);
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("AddParkingContract")]
         public async Task<IActionResult> AddParkingContract([FromQuery] int shortCardModel, [FromQuery] long tscSerial)
         {
-            var result = "OK";
             try
             {
-                result = await DBOracleManager.AddParkingContract(
+                var result = await DBOracleManager.AddParkingContract(
                     ControllersHelper.GetConnectionString(_configuration, ConnectionString.SBME_GESTOWN),
                     _configuration.GetConnectionString("SGGESTOWN_UNSAFE"),
                     shortCardModel, tscSerial);
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                LogHelper.Error(_logger, new UpdateCustomerException(ex));
+                LogHelper.Error(_logger, ex);
                 return BadRequest(ex.Message);
             }
-            return Ok(result);
         }
 
         [HttpPost("RemoveParkingContract")]
         public async Task<IActionResult> RemoveParkingContract([FromQuery] int shortCardModel, [FromQuery] long tscSerial)
         {
-            var result = "OK";
             try
             {
-                result = await DBOracleManager.RemoveParkingContract(
+                var result = await DBOracleManager.RemoveParkingContract(
                     ControllersHelper.GetConnectionString(_configuration, ConnectionString.SBME_GESTOWN),
                     _configuration.GetConnectionString("SGGESTOWN_UNSAFE"),
                     shortCardModel, tscSerial);
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                LogHelper.Error(_logger, new UpdateCustomerException(ex));
+                LogHelper.Error(_logger, ex);
                 return BadRequest(ex.Message);
             }
-            return Ok(result);
         }
         #endregion
     }

@@ -19,6 +19,68 @@ namespace AFCS.TOM.Sbme2Server
     {
         private static NLog.Logger Logger = LogManager.GetLogger("Sbme2Server");
 
+        private static async Task RollbackTransactionPreservingErrorAsync(OracleTransaction? transaction)
+        {
+            if (transaction == null)
+                return;
+
+            try
+            {
+                await transaction.RollbackAsync();
+            }
+            catch (Exception rollbackException)
+            {
+                LogHelper.Error(Logger, rollbackException);
+            }
+        }
+
+        // Each batch is atomic within its own Oracle connection. Separate databases
+        // cannot be committed atomically without a distributed transaction.
+        private static async Task DeleteTscRecordsAsync(string connectionString, string databaseName, long tscSerial, params string[] queries)
+        {
+            OracleConnection? connection = null;
+            OracleTransaction? transaction = null;
+            var commitAttempted = false;
+            try
+            {
+                connection = await DBOracleHelper.OpenDBConnection(connectionString);
+                if (connection == null)
+                    throw new DBConnectionOpeningException(connectionString);
+
+                transaction = connection.BeginTransaction();
+                var serial = tscSerial.ToString(CultureInfo.InvariantCulture);
+                foreach (var query in queries)
+                {
+                    using var cmd = new OracleCommand(query, connection)
+                    {
+                        CommandType = CommandType.Text,
+                        BindByName = true
+                    };
+                    cmd.Parameters.Add("TscSerial", OracleDbType.Varchar2).Value = serial;
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                commitAttempted = true;
+                await transaction.CommitAsync();
+            }
+            catch (Exception ex)
+            {
+                if (commitAttempted)
+                    Logger?.Error(ex, $"Oracle TSC cleanup commit outcome is uncertain for {databaseName}; verify the records before retrying.");
+                await RollbackTransactionPreservingErrorAsync(transaction);
+                throw;
+            }
+            finally
+            {
+                transaction?.Dispose();
+                if (connection != null)
+                {
+                    if (connection.State != ConnectionState.Closed)
+                        await DBOracleHelper.CloseDBConnection(connection);
+                    await connection.DisposeAsync();
+                }
+            }
+        }
+
         private static async Task AddDataOperation(OracleConnection connection, SbmeDataOperation operation, string tableName, string rowId, string schema = "GESTOWN")
         {
             if (!string.IsNullOrWhiteSpace(schema) && schema.Last() != '.')
@@ -181,13 +243,16 @@ namespace AFCS.TOM.Sbme2Server
             catch (Exception ex)
             {
                 Logger?.Error($"Failed creating a new customer: {ex}");
-                await tran?.RollbackAsync();
+                await RollbackTransactionPreservingErrorAsync(tran);
                 throw;
             }
             finally
             {
+                tran?.Dispose();
                 if ((connection?.State ?? ConnectionState.Closed) != ConnectionState.Closed)
                     await DBOracleHelper.CloseDBConnection(connection);
+                if (connection != null)
+                    await connection.DisposeAsync();
             }
             return retValue;
         }
@@ -230,13 +295,16 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch (Exception ex)
             {
-                await tran?.RollbackAsync();
+                await RollbackTransactionPreservingErrorAsync(tran);
                 throw;
             }
             finally
             {
+                tran?.Dispose();
                 if ((connection?.State ?? ConnectionState.Closed) != ConnectionState.Closed)
                     await DBOracleHelper.CloseDBConnection(connection);
+                if (connection != null)
+                    await connection.DisposeAsync();
             }
         }
 
@@ -1506,146 +1574,66 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch
             {
-                await tran?.RollbackAsync();
+                await RollbackTransactionPreservingErrorAsync(tran);
                 throw;
             }
             finally
             {
+                tran?.Dispose();
                 if ((connection?.State ?? ConnectionState.Closed) != ConnectionState.Closed)
                     await DBOracleHelper.CloseDBConnection(connection);
+                if (connection != null)
+                    await connection.DisposeAsync();
             }
             return result;
         }
 
+
         public static async Task ForgetTscDocument(string connectionStringSbme, string connectionStringSg, string connectionStringSgUnsafe, long tscSerial)
         {
-            OracleConnection connection = null;
+            if (string.IsNullOrWhiteSpace(connectionStringSbme) &&
+                string.IsNullOrWhiteSpace(connectionStringSg) &&
+                string.IsNullOrWhiteSpace(connectionStringSgUnsafe))
+            {
+                throw new ArgumentException("At least one Oracle connection string is required.");
+            }
+
+            var committedDatabases = new List<string>();
             try
             {
                 if (!string.IsNullOrWhiteSpace(connectionStringSbme))
                 {
-                    connection = await DBOracleHelper.OpenDBConnection(connectionStringSbme);
-                    if (connection == null)
-                        throw new DBConnectionOpeningException(connectionStringSbme);
-                    var query = $"DELETE FROM GESTOWN.TSC_DOCUMENTS WHERE TSCSERIALNO='{tscSerial}'";
-                    using (var cmd = new OracleCommand(query, connection))
-                    {
-                        cmd.CommandType = CommandType.Text;
-                        var res = await cmd.ExecuteNonQueryAsync();
-                    }
+                    await DeleteTscRecordsAsync(connectionStringSbme, "SBME", tscSerial,
+                        "DELETE FROM GESTOWN.TSC_DOCUMENTS WHERE TSCSERIALNO = :TscSerial");
+                    committedDatabases.Add("SBME");
                 }
 
                 if (!string.IsNullOrWhiteSpace(connectionStringSgUnsafe))
                 {
-                    connection = await DBOracleHelper.OpenDBConnection(connectionStringSgUnsafe);
-                    if (connection == null)
-                        throw new DBConnectionOpeningException(connectionStringSgUnsafe);
-                    var query = $"DELETE FROM SG_dsdemh.TSC_DOCUMENTS WHERE TSCSERIALNO='{tscSerial}'";
-                    using (var cmd = new OracleCommand(query, connection))
-                    {
-                        cmd.CommandType = CommandType.Text;
-                        var res = await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    query = $"DELETE FROM SG_dsdemh.SBME_TSC_Contracts WHERE TSCSERIALNO='{tscSerial}'";
-                    using (var cmd = new OracleCommand(query, connection))
-                    {
-                        cmd.CommandType = CommandType.Text;
-                        var res = await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    query = $"DELETE FROM SG_dsdemh.SBME_TSC_Documents WHERE TSCSERIALNO='{tscSerial}'";
-                    using (var cmd = new OracleCommand(query, connection))
-                    {
-                        cmd.CommandType = CommandType.Text;
-                        var res = await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    query = $"DELETE FROM SG_dsdemh.SBME_TSC_BlackList WHERE LowSerialNo='{tscSerial}'";
-                    using (var cmd = new OracleCommand(query, connection))
-                    {
-                        cmd.CommandType = CommandType.Text;
-                        var res = await cmd.ExecuteNonQueryAsync();
-                    }
-                    var reqIds = new List<int>();
-                    query = $"SELECT TSCREQID FROM SG_dsdemh.TSC_REQUESTS WHERE TSCSERIALNO='{tscSerial}'"; // 2019241670
-                    using (var cmd = new OracleCommand(query, connection))
-                    {
-                        cmd.CommandType = CommandType.Text;
-                        using (var reader = await cmd.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                                reqIds.Add((int)reader.GetValue(0));
-                        }
-                    }
-                    if (reqIds.Count > 0)
-                    {
-                        query = $"DELETE FROM SG_dsdemh.TARIFFREQUESTS WHERE TSCREQID IN ({string.Join(',', reqIds)})";
-                        using (var cmd = new OracleCommand(query, connection))
-                        {
-                            cmd.CommandType = CommandType.Text;
-                            var res = await cmd.ExecuteNonQueryAsync();
-                        }
-                        query = $"DELETE FROM SG_dsdemh.TSC_REQUESTS WHERE TSCSERIALNO='{tscSerial}'";
-                        using (var cmd = new OracleCommand(query, connection))
-                        {
-                            cmd.CommandType = CommandType.Text;
-                            var res = await cmd.ExecuteNonQueryAsync();
-                        }
-                    }
+                    await DeleteTscRecordsAsync(connectionStringSgUnsafe, "SG unsafe", tscSerial,
+                        "DELETE FROM SG_dsdemh.TSC_DOCUMENTS WHERE TSCSERIALNO = :TscSerial",
+                        "DELETE FROM SG_dsdemh.SBME_TSC_Contracts WHERE TSCSERIALNO = :TscSerial",
+                        "DELETE FROM SG_dsdemh.SBME_TSC_Documents WHERE TSCSERIALNO = :TscSerial",
+                        "DELETE FROM SG_dsdemh.SBME_TSC_BlackList WHERE LowSerialNo = :TscSerial",
+                        "DELETE FROM SG_dsdemh.TARIFFREQUESTS WHERE TSCREQID IN (SELECT TSCREQID FROM SG_dsdemh.TSC_REQUESTS WHERE TSCSERIALNO = :TscSerial)",
+                        "DELETE FROM SG_dsdemh.TSC_REQUESTS WHERE TSCSERIALNO = :TscSerial");
+                    committedDatabases.Add("SG unsafe");
                 }
 
                 if (!string.IsNullOrWhiteSpace(connectionStringSg))
                 {
-                    connection = await DBOracleHelper.OpenDBConnection(connectionStringSg);
-                    if (connection == null)
-                        throw new DBConnectionOpeningException(connectionStringSg);
-                    
-                    var ctrSerials = new List<long>();
-                    var query = $"SELECT SERIALNO FROM SG_dsdemh.T_DSDE_Contracts WHERE TSCSERIALNO='{tscSerial}'";
-                    using (var cmd = new OracleCommand(query, connection))
-                    {
-                        cmd.CommandType = CommandType.Text;
-                        using (var reader = await cmd.ExecuteReaderAsync())
-                        {
-                            while (await reader.ReadAsync())
-                                ctrSerials.Add((long)reader.GetValue(0));
-                        }
-                    }
-
-                    if (ctrSerials.Count > 0)
-                        foreach (var ctrSerial in ctrSerials)
-                        {
-                            query = $"DELETE FROM SG_dsdemh.PARAMETERDV WHERE SERIALNO='{ctrSerial}'";
-                            using (var cmd = new OracleCommand(query, connection))
-                            {
-                                cmd.CommandType = CommandType.Text;
-                                var res = await cmd.ExecuteNonQueryAsync();
-                            }
-                            query = $"DELETE FROM SG_dsdemh.PARAMETERSV_RV WHERE SERIALNO='{ctrSerial}'";
-                            using (var cmd = new OracleCommand(query, connection))
-                            {
-                                cmd.CommandType = CommandType.Text;
-                                var res = await cmd.ExecuteNonQueryAsync();
-                            }
-                        }
-
-                    query = $"DELETE FROM SG_dsdemh.T_DSDE_Contracts WHERE TSCSERIALNO='{tscSerial}'";
-                    using (var cmd = new OracleCommand(query, connection))
-                    {
-                        cmd.CommandType = CommandType.Text;
-                        var res = await cmd.ExecuteNonQueryAsync();
-                    }
+                    await DeleteTscRecordsAsync(connectionStringSg, "SG", tscSerial,
+                        "DELETE FROM SG_dsdemh.PARAMETERDV WHERE SERIALNO IN (SELECT SERIALNO FROM SG_dsdemh.T_DSDE_Contracts WHERE TSCSERIALNO = :TscSerial)",
+                        "DELETE FROM SG_dsdemh.PARAMETERSV_RV WHERE SERIALNO IN (SELECT SERIALNO FROM SG_dsdemh.T_DSDE_Contracts WHERE TSCSERIALNO = :TscSerial)",
+                        "DELETE FROM SG_dsdemh.T_DSDE_Contracts WHERE TSCSERIALNO = :TscSerial");
+                    committedDatabases.Add("SG");
                 }
             }
             catch (Exception ex)
             {
+                if (committedDatabases.Count > 0)
+                    Logger?.Error(ex, $"TSC cleanup for serial {tscSerial} stopped after committing: {string.Join(", ", committedDatabases)}. Manual database reconciliation may be required.");
                 throw;
-            }
-            finally
-            {
-                if ((connection?.State ?? ConnectionState.Closed) != ConnectionState.Closed)
-                    await DBOracleHelper.CloseDBConnection(connection);
             }
         }
 
@@ -1654,6 +1642,7 @@ namespace AFCS.TOM.Sbme2Server
             OracleConnection? connection1 = null;
             //OracleConnection? connection2 = null;
             OracleTransaction? tran1 = null;
+            var commitAttempted = false;
             //OracleTransaction? tran2 = null;
             try
             {
@@ -1874,7 +1863,10 @@ namespace AFCS.TOM.Sbme2Server
                     //}
 
                     if (tran1 != null)
+                    {
+                        commitAttempted = true;
                         await tran1.CommitAsync();
+                    }
                     //if (tran2 != null)
                     //    await tran2.CommitAsync();
 
@@ -1885,22 +1877,20 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch (Exception ex)
             {
-                if (tran1 != null)
-                    await tran1.RollbackAsync();
+                if (commitAttempted)
+                    Logger?.Error(ex, $"AddParkingContract commit outcome is uncertain for TSC {tscSerial}; verify before retrying.");
+                await RollbackTransactionPreservingErrorAsync(tran1);
                 //if (tran2 != null)
                 //    await tran2.RollbackAsync();
-                if (ex != null)
-                {
-                    var res = ex.InnerException?.Message ?? ex.Message;
-                    if (res == null) throw;
-                    else return res;
-                }
-                return "OK";
+                throw;
             }
             finally
             {
+                tran1?.Dispose();
                 if ((connection1?.State ?? ConnectionState.Closed) != ConnectionState.Closed)
                     await DBOracleHelper.CloseDBConnection(connection1);
+                if (connection1 != null)
+                    await connection1.DisposeAsync();
                 //if ((connection2?.State ?? ConnectionState.Closed) != ConnectionState.Closed)
                 //    await DBOracleHelper.CloseDBConnection(connection2);
             }
@@ -1912,6 +1902,10 @@ namespace AFCS.TOM.Sbme2Server
             OracleConnection? connection2 = null;
             OracleTransaction? tran1 = null;
             OracleTransaction? tran2 = null;
+            var sbmeCommitAttempted = false;
+            var sbmeCommitted = false;
+            var sgCommitAttempted = false;
+            var sgCommitted = false;
             try
             {
                 var cs1 = !string.IsNullOrWhiteSpace(connectionStringSbme);
@@ -2022,9 +2016,17 @@ namespace AFCS.TOM.Sbme2Server
                     }
 
                     if (tran1 != null)
+                    {
+                        sbmeCommitAttempted = true;
                         await tran1.CommitAsync();
+                        sbmeCommitted = true;
+                    }
                     if (tran2 != null)
+                    {
+                        sgCommitAttempted = true;
                         await tran2.CommitAsync();
+                        sgCommitted = true;
+                    }
 
                     return "OK";
                 }
@@ -2033,24 +2035,26 @@ namespace AFCS.TOM.Sbme2Server
             }
             catch (Exception ex)
             {
-                if (tran1 != null)
-                    await tran1.RollbackAsync();
-                if (tran2 != null)
-                    await tran2.RollbackAsync();
-                if (ex != null)
-                {
-                    var res = ex.InnerException?.Message ?? ex.Message;
-                    if (res == null) throw;
-                    else return res;
-                }
-                return "OK";
+                if (sbmeCommitAttempted)
+                    Logger?.Error(ex, $"RemoveParkingContract for TSC {tscSerial} may be partially committed. SBME confirmed: {sbmeCommitted}; SG commit attempted: {sgCommitAttempted}. Verify both databases before retrying.");
+                if (!sbmeCommitted)
+                    await RollbackTransactionPreservingErrorAsync(tran1);
+                if (!sgCommitted)
+                    await RollbackTransactionPreservingErrorAsync(tran2);
+                throw;
             }
             finally
             {
+                tran1?.Dispose();
+                tran2?.Dispose();
                 if ((connection1?.State ?? ConnectionState.Closed) != ConnectionState.Closed)
                     await DBOracleHelper.CloseDBConnection(connection1);
+                if (connection1 != null)
+                    await connection1.DisposeAsync();
                 if ((connection2?.State ?? ConnectionState.Closed) != ConnectionState.Closed)
                     await DBOracleHelper.CloseDBConnection(connection2);
+                if (connection2 != null)
+                    await connection2.DisposeAsync();
             }
         }
     }
